@@ -1,3 +1,0 @@
-/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles/users_service.dir
-/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles/edit_cache.dir
-/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles/rebuild_cache.dir
