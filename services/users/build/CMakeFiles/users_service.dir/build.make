@@ -125,10 +125,24 @@ CMakeFiles/users_service.dir/repositories/UserRepository.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/users_service.dir/repositories/UserRepository.cc.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/repositories/UserRepository.cc -o CMakeFiles/users_service.dir/repositories/UserRepository.cc.s
 
+CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o: CMakeFiles/users_service.dir/flags.make
+CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o: /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/repositories/SessionRepository.cc
+CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o: CMakeFiles/users_service.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o -MF CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o.d -o CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o -c /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/repositories/SessionRepository.cc
+
+CMakeFiles/users_service.dir/repositories/SessionRepository.cc.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/users_service.dir/repositories/SessionRepository.cc.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/repositories/SessionRepository.cc > CMakeFiles/users_service.dir/repositories/SessionRepository.cc.i
+
+CMakeFiles/users_service.dir/repositories/SessionRepository.cc.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/users_service.dir/repositories/SessionRepository.cc.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/repositories/SessionRepository.cc -o CMakeFiles/users_service.dir/repositories/SessionRepository.cc.s
+
 CMakeFiles/users_service.dir/utils/HashUtils.cc.o: CMakeFiles/users_service.dir/flags.make
 CMakeFiles/users_service.dir/utils/HashUtils.cc.o: /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/utils/HashUtils.cc
 CMakeFiles/users_service.dir/utils/HashUtils.cc.o: CMakeFiles/users_service.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/users_service.dir/utils/HashUtils.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/users_service.dir/utils/HashUtils.cc.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/users_service.dir/utils/HashUtils.cc.o -MF CMakeFiles/users_service.dir/utils/HashUtils.cc.o.d -o CMakeFiles/users_service.dir/utils/HashUtils.cc.o -c /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/utils/HashUtils.cc
 
 CMakeFiles/users_service.dir/utils/HashUtils.cc.i: cmake_force
@@ -142,7 +156,7 @@ CMakeFiles/users_service.dir/utils/HashUtils.cc.s: cmake_force
 CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o: CMakeFiles/users_service.dir/flags.make
 CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o: /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc
 CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o: CMakeFiles/users_service.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o -MF CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o.d -o CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o -c /home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc
 
 CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.i: cmake_force
@@ -159,6 +173,7 @@ users_service_OBJECTS = \
 "CMakeFiles/users_service.dir/controllers/AuthController.cc.o" \
 "CMakeFiles/users_service.dir/services/UserService.cc.o" \
 "CMakeFiles/users_service.dir/repositories/UserRepository.cc.o" \
+"CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o" \
 "CMakeFiles/users_service.dir/utils/HashUtils.cc.o" \
 "CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o"
 
@@ -169,6 +184,7 @@ users_service: CMakeFiles/users_service.dir/main.cc.o
 users_service: CMakeFiles/users_service.dir/controllers/AuthController.cc.o
 users_service: CMakeFiles/users_service.dir/services/UserService.cc.o
 users_service: CMakeFiles/users_service.dir/repositories/UserRepository.cc.o
+users_service: CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o
 users_service: CMakeFiles/users_service.dir/utils/HashUtils.cc.o
 users_service: CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o
 users_service: CMakeFiles/users_service.dir/build.make
@@ -181,7 +197,7 @@ users_service: /usr/lib/x86_64-linux-gnu/libz.so
 users_service: /usr/lib/x86_64-linux-gnu/libssl.so
 users_service: /usr/lib/x86_64-linux-gnu/libcrypto.so
 users_service: CMakeFiles/users_service.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable users_service"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/users/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable users_service"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/users_service.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

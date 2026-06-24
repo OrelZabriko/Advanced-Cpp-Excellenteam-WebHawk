@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o.d"
   "CMakeFiles/users_service.dir/main.cc.o"
   "CMakeFiles/users_service.dir/main.cc.o.d"
+  "CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o"
+  "CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o.d"
   "CMakeFiles/users_service.dir/repositories/UserRepository.cc.o"
   "CMakeFiles/users_service.dir/repositories/UserRepository.cc.o.d"
   "CMakeFiles/users_service.dir/services/UserService.cc.o"

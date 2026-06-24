@@ -2,7 +2,6 @@
 #include "../services/UserService.h"
 
 void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-    // 1. Parse JSON body
     auto json = req->getJsonObject();
     if (!json) {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Invalid JSON body"));
@@ -11,7 +10,6 @@ void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(
         return;
     }
 
-    // 2. Validate input
     if (!json->isMember("email") || !json->isMember("password")) {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Email and password are required"));
         resp->setStatusCode(k400BadRequest);
@@ -29,10 +27,8 @@ void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(
         return;
     }
 
-    // 3. Call service
     UserService::registerUser(
-        email,
-        password,
+        email, password,
         [callback]() {
             Json::Value response;
             response["message"] = "User registered successfully";
@@ -58,7 +54,6 @@ void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(
 }
 
 void AuthController::login(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-    // 1. Parse JSON body
     auto json = req->getJsonObject();
     if (!json) {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Invalid JSON body"));
@@ -67,7 +62,6 @@ void AuthController::login(const HttpRequestPtr &req, std::function<void(const H
         return;
     }
 
-    // 2. Validate input
     if (!json->isMember("email") || !json->isMember("password")) {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Email and password are required"));
         resp->setStatusCode(k400BadRequest);
@@ -85,14 +79,10 @@ void AuthController::login(const HttpRequestPtr &req, std::function<void(const H
         return;
     }
 
-    // 3. Get client IP
     std::string ip = req->getPeerAddr().toIp();
 
-    // 4. Call service
     UserService::loginUser(
-        email,
-        password,
-        ip,
+        email, password, ip,
         [callback](const std::string &token) {
             Json::Value response;
             response["token"] = token;
@@ -119,6 +109,41 @@ void AuthController::login(const HttpRequestPtr &req, std::function<void(const H
 }
 
 void AuthController::logout(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-    auto resp = HttpResponse::newHttpJsonResponse(Json::Value("logout endpoint - not implemented yet"));
-    callback(resp);
+    // Extract token from Authorization header
+    std::string authHeader = req->getHeader("Authorization");
+    if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ") {
+        Json::Value response;
+        response["error"] = "Missing or invalid Authorization header";
+        auto resp = HttpResponse::newHttpJsonResponse(response);
+        resp->setStatusCode(k401Unauthorized);
+        callback(resp);
+        return;
+    }
+
+    std::string token = authHeader.substr(7);
+
+    UserService::logoutUser(
+        token,
+        [callback]() {
+            Json::Value response;
+            response["message"] = "Logged out successfully";
+            auto resp = HttpResponse::newHttpJsonResponse(response);
+            resp->setStatusCode(k200OK);
+            callback(resp);
+        },
+        [callback]() {
+            Json::Value response;
+            response["error"] = "Session not found or already revoked";
+            auto resp = HttpResponse::newHttpJsonResponse(response);
+            resp->setStatusCode(k404NotFound);
+            callback(resp);
+        },
+        [callback](const std::string &error) {
+            Json::Value response;
+            response["error"] = "Internal server error";
+            auto resp = HttpResponse::newHttpJsonResponse(response);
+            resp->setStatusCode(k500InternalServerError);
+            callback(resp);
+        }
+    );
 }

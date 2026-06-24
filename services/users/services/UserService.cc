@@ -1,5 +1,6 @@
 #include "UserService.h"
 #include "../repositories/UserRepository.h"
+#include "../repositories/SessionRepository.h"
 #include "../utils/HashUtils.h"
 #include <jwt/jwt.hpp>
 #include <ctime>
@@ -12,14 +13,7 @@ void UserService::registerUser(
     std::function<void(const std::string &error)> onError
 ) {
     std::string passwordHash = HashUtils::hashPassword(password);
-
-    UserRepository::insert(
-        email,
-        passwordHash,
-        onSuccess,
-        onDuplicate,
-        onError
-    );
+    UserRepository::insert(email, passwordHash, onSuccess, onDuplicate, onError);
 }
 
 void UserService::loginUser(
@@ -33,13 +27,11 @@ void UserService::loginUser(
     UserRepository::findByEmail(
         email,
         [password, ip, onSuccess, onInvalidCredentials, onError](int userId, const std::string &storedHash) {
-            // Verify password
             if (!HashUtils::verifyPassword(password, storedHash)) {
                 onInvalidCredentials();
                 return;
             }
 
-            // Generate JWT
             using namespace jwt::params;
             auto token = jwt::jwt_object{
                 algorithm("HS256"),
@@ -51,21 +43,26 @@ void UserService::loginUser(
             };
             std::string tokenStr = token.signature();
 
-            // Insert session
-            auto dbClient = drogon::app().getDbClient();
-            dbClient->execSqlAsync(
-                "INSERT INTO user_sessions (user_id, token_id, ip, expires_at) "
-                "VALUES ($1, $2, $3, NOW() + INTERVAL '24 hours')",
-                [onSuccess, tokenStr](const drogon::orm::Result &r) {
+            SessionRepository::insert(
+                userId, tokenStr, ip,
+                [onSuccess, tokenStr]() {
                     onSuccess(tokenStr);
                 },
-                [onError](const drogon::orm::DrogonDbException &e) {
-                    onError(e.base().what());
-                },
-                userId, tokenStr, ip
+                [onError](const std::string &error) {
+                    onError(error);
+                }
             );
         },
         onInvalidCredentials,
         onError
     );
+}
+
+void UserService::logoutUser(
+    const std::string &tokenId,
+    std::function<void()> onSuccess,
+    std::function<void()> onNotFound,
+    std::function<void(const std::string &error)> onError
+) {
+    SessionRepository::revoke(tokenId, onSuccess, onNotFound, onError);
 }

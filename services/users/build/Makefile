@@ -201,6 +201,30 @@ main.cc.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/main.cc.s
 .PHONY : main.cc.s
 
+repositories/SessionRepository.o: repositories/SessionRepository.cc.o
+.PHONY : repositories/SessionRepository.o
+
+# target to build an object file
+repositories/SessionRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/repositories/SessionRepository.cc.o
+.PHONY : repositories/SessionRepository.cc.o
+
+repositories/SessionRepository.i: repositories/SessionRepository.cc.i
+.PHONY : repositories/SessionRepository.i
+
+# target to preprocess a source file
+repositories/SessionRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/repositories/SessionRepository.cc.i
+.PHONY : repositories/SessionRepository.cc.i
+
+repositories/SessionRepository.s: repositories/SessionRepository.cc.s
+.PHONY : repositories/SessionRepository.s
+
+# target to generate assembly for a file
+repositories/SessionRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/repositories/SessionRepository.cc.s
+.PHONY : repositories/SessionRepository.cc.s
+
 repositories/UserRepository.o: repositories/UserRepository.cc.o
 .PHONY : repositories/UserRepository.o
 
@@ -291,6 +315,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... repositories/SessionRepository.o"
+	@echo "... repositories/SessionRepository.i"
+	@echo "... repositories/SessionRepository.s"
 	@echo "... repositories/UserRepository.o"
 	@echo "... repositories/UserRepository.i"
 	@echo "... repositories/UserRepository.s"

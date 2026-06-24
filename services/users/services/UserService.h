@@ -22,4 +22,12 @@ public:
         std::function<void()> onInvalidCredentials,
         std::function<void(const std::string &error)> onError
     );
+
+    // Logout a user — revokes the session
+    static void logoutUser(
+        const std::string &tokenId,
+        std::function<void()> onSuccess,
+        std::function<void()> onNotFound,
+        std::function<void(const std::string &error)> onError
+    );
 };

@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
     controllers/AuthController.cc
     services/UserService.cc
     repositories/UserRepository.cc
+    repositories/SessionRepository.cc
     utils/HashUtils.cc
     ../../shared/DB_Repository.cc
 )
