@@ -153,6 +153,30 @@ controllers/AuthController.cc.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/controllers/AuthController.cc.s
 .PHONY : controllers/AuthController.cc.s
 
+home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.o: home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o
+.PHONY : home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.o
+
+# target to build an object file
+home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o
+.PHONY : home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.o
+
+home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.i: home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.i
+.PHONY : home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.i
+
+# target to preprocess a source file
+home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.i
+.PHONY : home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.i
+
+home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.s: home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.s
+.PHONY : home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.s
+
+# target to generate assembly for a file
+home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.s
+.PHONY : home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.cc.s
+
 main.o: main.cc.o
 .PHONY : main.o
 
@@ -177,6 +201,78 @@ main.cc.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/main.cc.s
 .PHONY : main.cc.s
 
+repositories/UserRepository.o: repositories/UserRepository.cc.o
+.PHONY : repositories/UserRepository.o
+
+# target to build an object file
+repositories/UserRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/repositories/UserRepository.cc.o
+.PHONY : repositories/UserRepository.cc.o
+
+repositories/UserRepository.i: repositories/UserRepository.cc.i
+.PHONY : repositories/UserRepository.i
+
+# target to preprocess a source file
+repositories/UserRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/repositories/UserRepository.cc.i
+.PHONY : repositories/UserRepository.cc.i
+
+repositories/UserRepository.s: repositories/UserRepository.cc.s
+.PHONY : repositories/UserRepository.s
+
+# target to generate assembly for a file
+repositories/UserRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/repositories/UserRepository.cc.s
+.PHONY : repositories/UserRepository.cc.s
+
+services/UserService.o: services/UserService.cc.o
+.PHONY : services/UserService.o
+
+# target to build an object file
+services/UserService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/services/UserService.cc.o
+.PHONY : services/UserService.cc.o
+
+services/UserService.i: services/UserService.cc.i
+.PHONY : services/UserService.i
+
+# target to preprocess a source file
+services/UserService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/services/UserService.cc.i
+.PHONY : services/UserService.cc.i
+
+services/UserService.s: services/UserService.cc.s
+.PHONY : services/UserService.s
+
+# target to generate assembly for a file
+services/UserService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/services/UserService.cc.s
+.PHONY : services/UserService.cc.s
+
+utils/HashUtils.o: utils/HashUtils.cc.o
+.PHONY : utils/HashUtils.o
+
+# target to build an object file
+utils/HashUtils.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/utils/HashUtils.cc.o
+.PHONY : utils/HashUtils.cc.o
+
+utils/HashUtils.i: utils/HashUtils.cc.i
+.PHONY : utils/HashUtils.i
+
+# target to preprocess a source file
+utils/HashUtils.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/utils/HashUtils.cc.i
+.PHONY : utils/HashUtils.cc.i
+
+utils/HashUtils.s: utils/HashUtils.cc.s
+.PHONY : utils/HashUtils.s
+
+# target to generate assembly for a file
+utils/HashUtils.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/users_service.dir/build.make CMakeFiles/users_service.dir/utils/HashUtils.cc.s
+.PHONY : utils/HashUtils.cc.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -189,9 +285,21 @@ help:
 	@echo "... controllers/AuthController.o"
 	@echo "... controllers/AuthController.i"
 	@echo "... controllers/AuthController.s"
+	@echo "... home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.o"
+	@echo "... home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.i"
+	@echo "... home/ben_beer/Advanced-Cpp-Excellenteam-WebHawk/services/shared/DB_Repository.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... repositories/UserRepository.o"
+	@echo "... repositories/UserRepository.i"
+	@echo "... repositories/UserRepository.s"
+	@echo "... services/UserService.o"
+	@echo "... services/UserService.i"
+	@echo "... services/UserService.s"
+	@echo "... utils/HashUtils.o"
+	@echo "... utils/HashUtils.i"
+	@echo "... utils/HashUtils.s"
 .PHONY : help
 
 
