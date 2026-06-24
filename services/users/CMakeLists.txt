@@ -5,6 +5,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Drogon REQUIRED)
+find_package(cpp-jwt REQUIRED)
 
-add_executable(${PROJECT_NAME} main.cc controllers/AuthController.cc)
-target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon cryptopp)
+add_executable(${PROJECT_NAME}
+    main.cc
+    controllers/AuthController.cc
+    services/UserService.cc
+    repositories/UserRepository.cc
+    repositories/SessionRepository.cc
+    utils/HashUtils.cc
+    ../../shared/DB_Repository.cc
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon cryptopp cpp-jwt::cpp-jwt)
