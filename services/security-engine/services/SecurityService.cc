@@ -134,13 +134,33 @@ void SecurityService::analyzeRequest(
         }
     }
 
-    // TODO (next step): Add Rate Limiting check here before allowing the request
-
-    // If all checks passed — log as clean and allow
-    SecurityRepository::logRequest(endpoint, method, "", false, ip,
-        [successCallback]() {
-            successCallback(true, "", "");
+    // --- Check 3: Rate Limiting (Step 4 from Build Plan) ---
+    // Track requests per IP per endpoint in a time window (1 minute, max 100 requests)
+    // as specified in the project spec.
+    SecurityRepository::updateAndCheckRateLimit(
+        endpoint, ip,
+        1,    // window: 1 minute
+        100,  // max 100 requests per window
+        [endpoint, method, ip, successCallback, errorCallback](bool isBlocked) {
+            if (isBlocked) {
+                // Rate limit exceeded — log and block
+                SecurityRepository::logRequest(endpoint, method, "rate_limit", true, ip,
+                    [successCallback]() {
+                        successCallback(false, "rate_limit", "Rate limit exceeded for this IP");
+                    },
+                    errorCallback
+                );
+            } else {
+                // All checks passed — log as clean and allow
+                SecurityRepository::logRequest(endpoint, method, "", false, ip,
+                    [successCallback]() {
+                        successCallback(true, "", "");
+                    },
+                    errorCallback
+                );
+            }
         },
         errorCallback
     );
 }
+
