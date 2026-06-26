@@ -37,3 +37,30 @@ bool SecurityService::detectSQLi(const std::string& input) {
     }
     return false;
 }
+
+// ============================================================
+// Step 3 (Build Plan): Cross-Site Scripting (XSS) Detector
+// Scans input for script tags and dangerous event handlers like:
+//   <script>alert(1)</script>
+//   onload=...
+// Returns true if an XSS pattern is detected.
+// ============================================================
+bool SecurityService::detectXSS(const std::string& input) {
+    std::string lower = input;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+    std::vector<std::regex> patterns = {
+        std::regex("(<\\s*script.*?>)"),                                // <script> tags
+        std::regex("(javascript\\s*:)"),                                // javascript: URI
+        std::regex("(on(load|error|click|mouseover|focus|blur)\\s*=)"), // Inline event handlers
+        std::regex("(<\\s*iframe.*?>)"),                                // <iframe> tags
+        std::regex("(<\\s*object.*?>)"),                                // <object> tags
+    };
+
+    for (const auto& pattern : patterns) {
+        if (std::regex_search(lower, pattern)) {
+            return true;
+        }
+    }
+    return false;
+}
