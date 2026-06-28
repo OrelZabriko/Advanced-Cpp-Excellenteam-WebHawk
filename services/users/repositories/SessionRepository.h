@@ -21,4 +21,12 @@ public:
         std::function<void()> onNotFound,
         std::function<void(const std::string &error)> onError
     );
+
+    // checks if a session is active
+    static void findByTokenId(
+        const std::string &tokenId,
+        std::function<void(int userId)> onFound,
+        std::function<void()> onNotFound,
+        std::function<void(const std::string &error)> onError
+    );
 };

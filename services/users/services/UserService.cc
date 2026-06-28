@@ -39,9 +39,10 @@ void UserService::loginUser(
                 secret(Config::JWT_SECRET()),
                 payload({
                     {"user_id", std::to_string(userId)},
-                    {"exp",     std::to_string(std::time(nullptr) + Config::JWT_EXPIRY_SECS())}
                 })
             };
+            token.add_claim("exp", std::time(nullptr) + Config::JWT_EXPIRY_SECS());
+
             std::string tokenStr = token.signature();
 
             SessionRepository::insert(
@@ -66,4 +67,46 @@ void UserService::logoutUser(
     std::function<void(const std::string &error)> onError
 ) {
     SessionRepository::revoke(tokenId, onSuccess, onNotFound, onError);
+}
+
+void UserService::validateToken(
+    const std::string &token,
+    std::function<void(int userId)> onValid,
+    std::function<void(const std::string &reason)> onInvalid,
+    std::function<void(const std::string &error)> onError
+) {
+    try {
+        using namespace jwt::params;
+        
+        std::error_code ec;
+        auto decoded = jwt::decode(
+            token,
+            algorithms({"HS256"}),
+            ec,
+            secret(Config::JWT_SECRET()),
+            verify(true)
+        );
+
+        if (ec) {
+            onInvalid("Invalid token: " + ec.message());
+            return;
+        }
+
+        // Check session is still active in DB
+        SessionRepository::findByTokenId(
+            token,
+            [onValid](int userId) {
+                onValid(userId);
+            },
+            [onInvalid]() {
+                onInvalid("Token revoked or expired");
+            },
+            [onError](const std::string &error) {
+                onError(error);
+            }
+        );
+
+    } catch (const std::exception &e) {
+        onInvalid(std::string("Invalid token: ") + e.what());
+    }
 }

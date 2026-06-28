@@ -43,3 +43,27 @@ void SessionRepository::revoke(
         tokenId
     );
 }
+
+void SessionRepository::findByTokenId(
+    const std::string &tokenId,
+    std::function<void(int userId)> onFound,
+    std::function<void()> onNotFound,
+    std::function<void(const std::string &error)> onError
+) {
+    DB_Repository::getInstance().run_query_params(
+        "SELECT user_id FROM user_sessions "
+        "WHERE token_id = $1 AND status = 'active' AND expires_at > NOW()",
+        [onFound, onNotFound](const drogon::orm::Result &result) {
+            if (result.empty()) {
+                onNotFound();
+            } else {
+                int userId = result[0]["user_id"].as<int>();
+                onFound(userId);
+            }
+        },
+        [onError](const std::string &error) {
+            onError(error);
+        },
+        tokenId
+    );
+}

@@ -9,9 +9,12 @@ public:
     ADD_METHOD_TO(AuthController::registerUser, "/register", Post);
     ADD_METHOD_TO(AuthController::login, "/login", Post);
     ADD_METHOD_TO(AuthController::logout, "/logout", Post);
+    ADD_METHOD_TO(AuthController::validate, "/validate", Get);
     METHOD_LIST_END
 
     void registerUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
     void login(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
     void logout(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
+    void validate(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
+
 };
