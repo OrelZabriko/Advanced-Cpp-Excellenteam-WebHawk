@@ -8,19 +8,16 @@ void SessionRepository::insert(
     std::function<void()> onSuccess,
     std::function<void(const std::string &error)> onError
 ) {
-    std::string sql = 
+    DB_Repository::getInstance().run_update_query_params(
         "INSERT INTO user_sessions (user_id, token_id, ip, expires_at) "
-        "VALUES (" + std::to_string(userId) + ", '" + tokenId + "', '" + ip + 
-        "', NOW() + INTERVAL '24 hours')";
-
-    DB_Repository::getInstance().run_update_query(
-        sql,
+        "VALUES ($1, $2, $3, NOW() + INTERVAL '24 hours')",
         [onSuccess](size_t rowsAffected) {
             onSuccess();
         },
         [onError](const std::string &error) {
             onError(error);
-        }
+        },
+        userId, tokenId, ip
     );
 }
 
@@ -30,12 +27,9 @@ void SessionRepository::revoke(
     std::function<void()> onNotFound,
     std::function<void(const std::string &error)> onError
 ) {
-    std::string sql = 
+    DB_Repository::getInstance().run_update_query_params(
         "UPDATE user_sessions SET status = 'revoked' "
-        "WHERE token_id = '" + tokenId + "' AND status = 'active'";
-
-    DB_Repository::getInstance().run_update_query(
-        sql,
+        "WHERE token_id = $1 AND status = 'active'",
         [onSuccess, onNotFound](size_t rowsAffected) {
             if (rowsAffected == 0) {
                 onNotFound();
@@ -45,6 +39,7 @@ void SessionRepository::revoke(
         },
         [onError](const std::string &error) {
             onError(error);
-        }
+        },
+        tokenId
     );
 }

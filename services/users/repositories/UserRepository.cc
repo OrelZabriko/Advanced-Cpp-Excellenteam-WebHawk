@@ -7,10 +7,8 @@ void UserRepository::findByEmail(
     std::function<void()> onNotFound,
     std::function<void(const std::string &error)> onError
 ) {
-    std::string sql = "SELECT id, password_hash FROM users WHERE email = '" + email + "'";
-
-    DB_Repository::getInstance().run_query(
-        sql,
+    DB_Repository::getInstance().run_query_params(
+        "SELECT id, password_hash FROM users WHERE email = $1",
         [onFound, onNotFound](const drogon::orm::Result &result) {
             if (result.empty()) {
                 onNotFound();
@@ -22,7 +20,8 @@ void UserRepository::findByEmail(
         },
         [onError](const std::string &error) {
             onError(error);
-        }
+        },
+        email
     );
 }
 
@@ -33,11 +32,8 @@ void UserRepository::insert(
     std::function<void()> onDuplicate,
     std::function<void(const std::string &error)> onError
 ) {
-    std::string sql = "INSERT INTO users (email, password_hash) VALUES ('" 
-                      + email + "', '" + passwordHash + "')";
-
-    DB_Repository::getInstance().run_update_query(
-        sql,
+    DB_Repository::getInstance().run_update_query_params(
+        "INSERT INTO users (email, password_hash) VALUES ($1, $2)",
         [onSuccess](size_t rowsAffected) {
             onSuccess();
         },
@@ -47,6 +43,7 @@ void UserRepository::insert(
             } else {
                 onError(error);
             }
-        }
+        },
+        email, passwordHash
     );
 }

@@ -4,7 +4,6 @@
 #include <memory>
 #include <drogon/drogon.h>
 
-// הגדרות הטיפוסים הכלליות של הפרויקט
 using DbSelectCallback = std::function<void(const drogon::orm::Result&)>;
 using DbUpdateCallback = std::function<void(size_t rowsAffected)>;
 using DbErrorCallback  = std::function<void(const std::string& errorMsg)>;
@@ -12,7 +11,6 @@ using DbErrorCallback  = std::function<void(const std::string& errorMsg)>;
 class DB_Repository {
 private:
     drogon::orm::DbClientPtr dbClient;
-
     DB_Repository(const std::string& dbClientName = "default");
 
 public:
@@ -21,21 +19,59 @@ public:
 
     static DB_Repository& getInstance();
 
-    // callbacks for database operations 
+    // Plain SQL queries (no parameters)
     void run_query(
         const std::string& sqlQuery,
         DbSelectCallback&& successCallback,
         DbErrorCallback&& errorCallback
     );
 
-    // callbacks for database update operations (INSERT, UPDATE, DELETE)
     void run_update_query(
         const std::string& sqlQuery,
         DbUpdateCallback&& successCallback,
         DbErrorCallback&& errorCallback
     );
 
-    // callbacks for database select operations
+    // Parameterized queries (safe from SQL injection)
+    template<typename... Args>
+    void run_query_params(
+        const std::string& sqlQuery,
+        DbSelectCallback successCallback,
+        DbErrorCallback errorCallback,
+        Args&&... args
+    ) {
+        dbClient->execSqlAsync(
+            sqlQuery,
+            [successCallback](const drogon::orm::Result& result) {
+                successCallback(result);
+            },
+            [errorCallback](const drogon::orm::DrogonDbException& e) {
+                errorCallback(e.base().what());
+            },
+            std::forward<Args>(args)...
+        );
+    }
+
+    template<typename... Args>
+    void run_update_query_params(
+        const std::string& sqlQuery,
+        DbUpdateCallback successCallback,
+        DbErrorCallback errorCallback,
+        Args&&... args
+    ) {
+        dbClient->execSqlAsync(
+            sqlQuery,
+            [successCallback](const drogon::orm::Result& result) {
+                successCallback(result.affectedRows());
+            },
+            [errorCallback](const drogon::orm::DrogonDbException& e) {
+                errorCallback(e.base().what());
+            },
+            std::forward<Args>(args)...
+        );
+    }
+
+    // Auto-build SELECT query
     void runSelectQuery(
         const std::string& sourceTable,
         DbSelectCallback&& successCallback,
