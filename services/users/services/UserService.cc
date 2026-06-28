@@ -1,4 +1,5 @@
 #include "UserService.h"
+#include "../utils/Config.h"
 #include "../repositories/UserRepository.h"
 #include "../repositories/SessionRepository.h"
 #include "../utils/HashUtils.h"
@@ -34,11 +35,11 @@ void UserService::loginUser(
 
             using namespace jwt::params;
             auto token = jwt::jwt_object{
-                algorithm("HS256"),
-                secret("webhawk_secret_key"),
+                algorithm(jwt::algorithm::HS256),
+                secret(Config::JWT_SECRET()),
                 payload({
                     {"user_id", std::to_string(userId)},
-                    {"exp",     std::to_string(std::time(nullptr) + 86400)}
+                    {"exp",     std::to_string(std::time(nullptr) + Config::JWT_EXPIRY_SECS())}
                 })
             };
             std::string tokenStr = token.signature();
