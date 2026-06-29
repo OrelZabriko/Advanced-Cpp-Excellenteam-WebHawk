@@ -147,3 +147,48 @@ void AuthController::logout(const HttpRequestPtr &req, std::function<void(const 
         }
     );
 }
+
+void AuthController::validate(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+    // 1. Extract token from Authorization header
+    std::string authHeader = req->getHeader("Authorization");
+    if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ") {
+        Json::Value response;
+        response["valid"] = false;
+        response["reason"] = "Missing or invalid Authorization header";
+        auto resp = HttpResponse::newHttpJsonResponse(response);
+        resp->setStatusCode(k401Unauthorized);
+        callback(resp);
+        return;
+    }
+
+    std::string token = authHeader.substr(7);
+
+    // 2. Call service
+    UserService::validateToken(
+        token,
+        [callback](int userId) {
+            Json::Value response;
+            response["valid"] = true;
+            response["user_id"] = userId;
+            auto resp = HttpResponse::newHttpJsonResponse(response);
+            resp->setStatusCode(k200OK);
+            callback(resp);
+        },
+        [callback](const std::string &reason) {
+            Json::Value response;
+            response["valid"] = false;
+            response["reason"] = reason;
+            auto resp = HttpResponse::newHttpJsonResponse(response);
+            resp->setStatusCode(k401Unauthorized);
+            callback(resp);
+        },
+        [callback](const std::string &error) {
+            Json::Value response;
+            response["valid"] = false;
+            response["reason"] = "Internal server error";
+            auto resp = HttpResponse::newHttpJsonResponse(response);
+            resp->setStatusCode(k500InternalServerError);
+            callback(resp);
+        }
+    );
+}

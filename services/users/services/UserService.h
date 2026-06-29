@@ -30,4 +30,12 @@ public:
         std::function<void()> onNotFound,
         std::function<void(const std::string &error)> onError
     );
+
+    // validates a JWT token
+    static void validateToken(
+        const std::string &token,
+        std::function<void(int userId)> onValid,
+        std::function<void(const std::string &reason)> onInvalid,
+        std::function<void(const std::string &error)> onError
+    );
 };
