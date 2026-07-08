@@ -48,5 +48,49 @@
         }
       ]
     }
+    ,
+    {
+      "name": "XSS Attack - should be BLOCKED",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/comments\",\n  \"method\": \"POST\",\n  \"ip\": \"203.0.113.6\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {},\n  \"path_params\": {},\n  \"body\": {\n    \"comment\": \"<script>alert(1)</script>\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "pm.test('Response says allowed=false', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.allowed).to.eql(false);",
+              "});",
+              "pm.test('Attack type is xss', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.attack_type).to.eql('xss');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
   ]
 }
