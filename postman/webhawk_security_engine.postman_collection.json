@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "WebHawk - Security Engine Tests",
+    "description": "Test collection for Nadav's Security Engine (POST /analyze). Based on the example payloads from WebHawk_Build_Plan.docx Step 6.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "SQLi Attack - should be BLOCKED",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/users\",\n  \"method\": \"GET\",\n  \"ip\": \"203.0.113.5\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {\n    \"search\": \"' OR 1=1 --\"\n  },\n  \"path_params\": {},\n  \"body\": {}\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "pm.test('Response says allowed=false', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.allowed).to.eql(false);",
+              "});",
+              "pm.test('Attack type is sqli', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.attack_type).to.eql('sqli');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+    ,
+    {
+      "name": "XSS Attack - should be BLOCKED",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/comments\",\n  \"method\": \"POST\",\n  \"ip\": \"203.0.113.6\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {},\n  \"path_params\": {},\n  \"body\": {\n    \"comment\": \"<script>alert(1)</script>\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "pm.test('Response says allowed=false', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.allowed).to.eql(false);",
+              "});",
+              "pm.test('Attack type is xss', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.attack_type).to.eql('xss');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clean Request - should be ALLOWED",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/products\",\n  \"method\": \"GET\",\n  \"ip\": \"203.0.113.7\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {\n    \"search\": \"laptop\"\n  },\n  \"path_params\": {},\n  \"body\": {}\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response says allowed=true', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.allowed).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rate Limit - run 101+ times to TRIGGER BLOCK",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// HOW TO TEST RATE LIMITING:",
+              "// 1. Open Postman Collection Runner (click the arrow next to the collection name)",
+              "// 2. Select only this request",
+              "// 3. Set 'Iterations' to 110",
+              "// 4. Set 'Delay' to 0ms",
+              "// 5. Click Run — requests 101-110 should return 403 with attack_type: rate_limit"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// This test is valid for the 101st+ request.",
+              "// When running via Collection Runner with 110 iterations,",
+              "// the first 100 should return 200, and from 101 onward — 403.",
+              "var json = pm.response.json();",
+              "if (pm.response.code === 403) {",
+              "    pm.test('Rate limit triggered: allowed=false', function () {",
+              "        pm.expect(json.allowed).to.eql(false);",
+              "    });",
+              "    pm.test('Attack type is rate_limit', function () {",
+              "        pm.expect(json.attack_type).to.eql('rate_limit');",
+              "    });",
+              "} else {",
+              "    pm.test('Request allowed (under rate limit)', function () {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/products\",\n  \"method\": \"GET\",\n  \"ip\": \"203.0.113.99\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {},\n  \"path_params\": {},\n  \"body\": {}\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      }
+    }
+  ]
+}
