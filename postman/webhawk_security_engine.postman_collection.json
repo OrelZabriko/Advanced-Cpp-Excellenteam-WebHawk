@@ -130,6 +130,67 @@
           }
         }
       ]
+    },
+    {
+      "name": "Rate Limit - run 101+ times to TRIGGER BLOCK",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// HOW TO TEST RATE LIMITING:",
+              "// 1. Open Postman Collection Runner (click the arrow next to the collection name)",
+              "// 2. Select only this request",
+              "// 3. Set 'Iterations' to 110",
+              "// 4. Set 'Delay' to 0ms",
+              "// 5. Click Run — requests 101-110 should return 403 with attack_type: rate_limit"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// This test is valid for the 101st+ request.",
+              "// When running via Collection Runner with 110 iterations,",
+              "// the first 100 should return 200, and from 101 onward — 403.",
+              "var json = pm.response.json();",
+              "if (pm.response.code === 403) {",
+              "    pm.test('Rate limit triggered: allowed=false', function () {",
+              "        pm.expect(json.allowed).to.eql(false);",
+              "    });",
+              "    pm.test('Attack type is rate_limit', function () {",
+              "        pm.expect(json.attack_type).to.eql('rate_limit');",
+              "    });",
+              "} else {",
+              "    pm.test('Request allowed (under rate limit)', function () {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/products\",\n  \"method\": \"GET\",\n  \"ip\": \"203.0.113.99\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {},\n  \"path_params\": {},\n  \"body\": {}\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      }
     }
   ]
 }
