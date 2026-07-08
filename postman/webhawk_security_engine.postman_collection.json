@@ -91,6 +91,45 @@
           }
         }
       ]
+    },
+    {
+      "name": "Clean Request - should be ALLOWED",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endpoint\": \"/api/products\",\n  \"method\": \"GET\",\n  \"ip\": \"203.0.113.7\",\n  \"headers\": {\n    \"user-agent\": \"Mozilla/5.0\"\n  },\n  \"query_params\": {\n    \"search\": \"laptop\"\n  },\n  \"path_params\": {},\n  \"body\": {}\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/analyze",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8081",
+          "path": ["analyze"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response says allowed=true', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.allowed).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
