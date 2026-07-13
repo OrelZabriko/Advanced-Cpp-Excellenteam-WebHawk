@@ -37,10 +37,6 @@ void SecurityRepository::updateAndCheckRateLimit(
 ) {
     // Use a prepared statement with $1..$4 to prevent SQL injection.
     // make_interval(mins => $3) safely converts the integer parameter to a PostgreSQL interval.
-    // UPSERT logic:
-    //   - First request from this IP+endpoint: INSERT with count=1, blocked=FALSE.
-    //   - Subsequent requests within the window: increment count, set blocked=TRUE if over limit.
-    //   - If the window has expired: reset count to 1 and unblock.
     std::string sql =
         "INSERT INTO limit_rate (endpoint, ip, request_count, window_start, blocked_status) "
         "VALUES ($1, $2, 1, NOW(), FALSE) "
