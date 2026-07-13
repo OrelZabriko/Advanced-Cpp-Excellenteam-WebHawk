@@ -2,7 +2,7 @@
 #include "../services/SecurityService.h"
 
 void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-    // 1. Parse the JSON body sent by Orel's middleware
+    // Parse the JSON body 
     auto json = req->getJsonObject();
     if (!json) {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Invalid JSON body"));
@@ -11,7 +11,7 @@ void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(c
         return;
     }
 
-    // 2. Validate required fields (as defined in the API Contracts doc)
+    // Validate required fields 
     if (!json->isMember("endpoint") || !json->isMember("method") || !json->isMember("ip")) {
         Json::Value error;
         error["error"] = "Missing required fields: endpoint, method, ip";
@@ -21,7 +21,7 @@ void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(c
         return;
     }
 
-    // 3. Pass the full JSON payload to SecurityService for analysis
+    // Pass the full JSON payload to SecurityService for analysis
     SecurityService::analyzeRequest(
         *json,
         [callback](bool allowed, const std::string &attackType, const std::string &reason) {

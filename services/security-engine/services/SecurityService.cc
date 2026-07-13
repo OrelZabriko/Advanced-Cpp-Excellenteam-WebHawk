@@ -5,16 +5,11 @@
 #include <iostream>
 
 // ============================================================
-// Step 2 (Build Plan): SQL Injection Detector
-// Scans input for known SQLi patterns such as:
-//   ' OR 1=1 --
-//   UNION SELECT
-//   DROP TABLE
-//   ; DELETE FROM
-// Returns true if a SQLi pattern is detected.
+// SQL Injection Detector:
+// Scans input for known SQLi patterns and returns true if a SQLi pattern is detected.
 // ============================================================
 bool SecurityService::detectSQLi(const std::string& input) {
-    // Convert input to lowercase for case-insensitive matching
+    // Convert input to lowercase for case insensitive matching
     std::string lower = input;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
 
@@ -39,11 +34,9 @@ bool SecurityService::detectSQLi(const std::string& input) {
 }
 
 // ============================================================
-// Step 3 (Build Plan): Cross-Site Scripting (XSS) Detector
-// Scans input for script tags and dangerous event handlers like:
-//   <script>alert(1)</script>
-//   onload=...
-// Returns true if an XSS pattern is detected.
+// Cross-Site Scripting (XSS) Detector:
+// Scans input for script tags and dangerous event handlers and
+// returns true if an XSS pattern is detected.
 // ============================================================
 bool SecurityService::detectXSS(const std::string& input) {
     std::string lower = input;
@@ -66,7 +59,7 @@ bool SecurityService::detectXSS(const std::string& input) {
 }
 
 // ============================================================
-// Helper: extract all string values from a JSON object
+// extract all string values from a JSON object
 // so we can scan every text field the client sent us.
 // For example, from: { "body": { "comment": "hello" }, "query_params": { "q": "test" } }
 // it will return: ["hello", "test"]
@@ -86,10 +79,9 @@ static void collectAllStrings(const Json::Value& node, std::vector<std::string>&
 }
 
 // ============================================================
-// Step 5 (Build Plan) - Part 1: analyzeRequest (SQLi + XSS only)
-// Receives the full JSON payload from Orel's middleware,
+// Part 1: analyzeRequest (SQLi + XSS only)
+// Receives the full JSON payload from the middleware,
 // extracts all text fields, and runs SQLi + XSS detection.
-// Rate limiting will be added in the next step.
 // ============================================================
 void SecurityService::analyzeRequest(
     const Json::Value& requestPayload,
@@ -134,7 +126,7 @@ void SecurityService::analyzeRequest(
         }
     }
 
-    // --- Check 3: Rate Limiting (Step 4 from Build Plan) ---
+    // --- Check 3: Rate Limiting 
     // Track requests per IP per endpoint in a time window (1 minute, max 100 requests)
     // as specified in the project spec.
     SecurityRepository::updateAndCheckRateLimit(
