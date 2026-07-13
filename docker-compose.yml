@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: webhawk_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=webhawk123
+      - POSTGRES_DB=webhawk
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    restart: always
+
+  security_engine:
+    build:
+      context: .
+      dockerfile: Dockerfile-security
+    container_name: webhawk_security
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres

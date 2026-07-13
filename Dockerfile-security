@@ -1,0 +1,14 @@
+FROM drogonframework/drogon:latest
+
+# Install dependencies (Postgres client library required by Drogon for DB access)
+RUN apt-get update && apt-get install -y libpq-dev
+
+WORKDIR /app
+COPY . /app
+
+WORKDIR /app/services/security-engine/build
+RUN cmake .. && make
+
+WORKDIR /app/services/security-engine
+# Run the compiled server
+CMD ["./build/security_engine"]
