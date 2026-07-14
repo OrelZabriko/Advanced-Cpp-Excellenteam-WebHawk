@@ -1,5 +1,5 @@
 .vscode/
 uploads/
 services/users/build/
-services/users/.env
+.env
 services/users/config.json

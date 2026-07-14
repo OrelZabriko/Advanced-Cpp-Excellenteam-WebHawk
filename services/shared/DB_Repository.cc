@@ -11,7 +11,7 @@ DB_Repository::DB_Repository(const std::string& dbClientName) {
 
 // DB_Repository::getInstance: Returns the singleton instance of the repository (Thread-safe)
 DB_Repository& DB_Repository::getInstance() {
-    static DB_Repository instance; // נוצר פעם אחת בלבד בריצה הראשונה
+    static DB_Repository instance; // Created once in the first run.
     return instance;
 }
 
