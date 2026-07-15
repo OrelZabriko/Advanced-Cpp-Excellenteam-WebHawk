@@ -1,5 +1,8 @@
 .vscode/
 uploads/
+*Zone.Identifier*
 services/users/build/
+services/security-engine/build/
+services/backend-registry/build/
+services/users/.env
 .env
-services/users/config.json

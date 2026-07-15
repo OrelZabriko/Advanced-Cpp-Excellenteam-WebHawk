@@ -157,7 +157,7 @@ void SecurityService::analyzeRequest(
         [endpoint, method, ip, successCallback, errorCallback](bool isBlocked) {
             if (isBlocked) 
             {
-                // Rate limit exceeded — log and block
+                // Rate limit exceeded - log and block
                 SecurityRepository::logRequest(endpoint, method, "rate_limit", true, ip,
                     [successCallback]() {
                         successCallback(false, "rate_limit", "Rate limit exceeded for this IP");
@@ -167,7 +167,7 @@ void SecurityService::analyzeRequest(
             } 
             else 
             {
-                // All checks passed — log as clean and allow
+                // All checks passed - log as clean and allow
                 SecurityRepository::logRequest(endpoint, method, "", false, ip,
                     [successCallback]() {
                         successCallback(true, "", "");

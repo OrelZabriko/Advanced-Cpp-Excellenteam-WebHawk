@@ -29,6 +29,7 @@ private:
         std::string line;
         while (std::getline(file, line)) 
         {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
             if (line.empty() || line[0] == '#') continue;
             auto pos = line.find('=');
             if (pos == std::string::npos) continue;

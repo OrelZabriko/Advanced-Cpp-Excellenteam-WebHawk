@@ -15,7 +15,7 @@ public:
         std::function<void(const std::string &error)> onError
     );
 
-    // Login a user — returns JWT token on success
+    // Login a user - returns JWT token on success
     static void loginUser(
         const std::string &email,
         const std::string &password,
@@ -25,7 +25,7 @@ public:
         std::function<void(const std::string &error)> onError
     );
 
-    // Logout a user — revokes the session
+    // Logout a user - revokes the session
     static void logoutUser(
         const std::string &tokenId,
         std::function<void()> onSuccess,

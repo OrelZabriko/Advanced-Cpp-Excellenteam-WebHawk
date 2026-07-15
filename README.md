@@ -1,4 +1,4 @@
-# WebHawk — Advanced C++ Excellenteam Final Project
+# WebHawk - Advanced C++ Excellenteam Final Project
 
 WebHawk is a security middleware platform: every incoming request is checked for
 SQL injection, XSS, and rate-limit abuse before it's forwarded to the real backend it's protecting.
@@ -34,7 +34,7 @@ only from inside the Docker network, by service name (e.g.
 ## Prerequisites
 
 - Docker + Docker Compose
-- This project is developed inside **WSL (Ubuntu)** — not native Windows —
+- This project is developed inside **WSL (Ubuntu)** - not native Windows -
   but everything below runs the same way once Docker is installed.
 
 ## Setup
@@ -50,7 +50,7 @@ cd Advanced-Cpp-Excellenteam-WebHawk
 ### 2. Create your `.env` file
 
 All secrets and per-environment settings (DB credentials, JWT secret, rate-limit
-config) live in a single `.env` file at the repo root — **not committed to git**.
+config) live in a single `.env` file at the repo root - **not committed to git**.
 Copy the template and adjust if needed:
 
 ```bash
@@ -78,12 +78,12 @@ RATE_LIMIT_WINDOW_SECS=60
   you're temporarily running a service natively for debugging (see the
   bottom of this file).
 - Config is split by ownership, all built on one shared `.env` loader:
-  - `services/shared/EnvLoader.h` — reads `.env` once (used by all three below)
-  - `services/shared/DbConfig.h` — `DB_*`, shared by every service that talks to Postgres
-  - `services/users/utils/AuthConfig.h` — `JWT_*`, used only by users
-  - `services/security-engine/utils/SecurityConfig.h` — `RATE_LIMIT_*`, used only by security-engine
+  - `services/shared/EnvLoader.h` - reads `.env` once (used by all three below)
+  - `services/shared/DbConfig.h` - `DB_*`, shared by every service that talks to Postgres
+  - `services/users/utils/AuthConfig.h` - `JWT_*`, used only by users
+  - `services/security-engine/utils/SecurityConfig.h` - `RATE_LIMIT_*`, used only by security-engine
 - Each service's `main.cc` builds its DB connection from `DbConfig::HOST()` etc.
-  in code — `config.json` no longer contains credentials, only the port it listens on.
+  in code - `config.json` no longer contains credentials, only the port it listens on.
 - **`.env` syntax rule**: each line must be `KEY=VALUE` only - no spaces around
   `=`, and no trailing comment on a value line. Only a line that starts with
   `#` is treated as a comment (see `EnvLoader.h`); `DB_HOST=postgres # docker`
