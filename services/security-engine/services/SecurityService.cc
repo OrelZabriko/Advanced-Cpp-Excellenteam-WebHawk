@@ -143,16 +143,12 @@ void SecurityService::analyzeRequest(
     }
 
     // --- Check 3: Rate Limiting 
-    // Track requests per IP per endpoint in a time window, per .env
-    // (see SecurityConfig.h). RATE_LIMIT_WINDOW_SECS is stored in seconds
-    // but updateAndCheckRateLimit expects whole minutes, so we convert.
-    // Note: windows that aren't a whole number of minutes will round down.
-    int windowMinutes = SecurityConfig::RATE_LIMIT_WINDOW_SECS() / 60;
-    if (windowMinutes < 1) windowMinutes = 1;
-
+    // Track requests per IP per endpoint in a sliding window, sized directly
+    // in seconds from .env (see SecurityConfig.h) - no unit conversion, so
+    // no precision loss for windows that aren't a whole number of minutes.
     SecurityRepository::updateAndCheckRateLimit(
         endpoint, ip,
-        windowMinutes,
+        SecurityConfig::RATE_LIMIT_WINDOW_SECS(),
         SecurityConfig::RATE_LIMIT_MAX_REQUESTS(),
         [endpoint, method, ip, successCallback, errorCallback](bool isBlocked) {
             if (isBlocked) 

@@ -30,10 +30,11 @@ void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(c
         [callback](bool allowed, const std::string &attackType, const std::string &reason) {
             Json::Value response;
             response["allowed"] = allowed;
-            if (!allowed) {
-                response["attack_type"] = attackType;
-                response["reason"] = reason;
-            }
+            // Per Contract A (API Contracts doc): always include attack_type
+            // and reason, as explicit null on a clean request - not omitted -
+            // so the middleware can rely on both fields always being present.
+            response["attack_type"] = allowed ? Json::Value::null : Json::Value(attackType);
+            response["reason"] = allowed ? Json::Value::null : Json::Value(reason);
             auto resp = HttpResponse::newHttpJsonResponse(response);
             resp->setStatusCode(allowed ? k200OK : k403Forbidden);
             callback(resp);

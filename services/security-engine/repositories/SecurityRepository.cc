@@ -31,20 +31,23 @@ void SecurityRepository::logRequest(
 void SecurityRepository::updateAndCheckRateLimit(
     const std::string& endpoint,
     const std::string& ip,
-    int windowMinutes,
+    int windowSeconds,
     int maxRequests,
     std::function<void(bool isBlocked)> successCallback,
     std::function<void(const std::string& error)> errorCallback
 ) 
 {
     // Use a prepared statement with $1..$4 to prevent SQL injection.
-    // make_interval(mins => $3) safely converts the integer parameter to a PostgreSQL interval.
+    // make_interval(secs => $3) safely converts the integer parameter to a
+    // PostgreSQL interval, directly in seconds - matching windowSeconds with
+    // no unit conversion needed (unlike the old mins => version, this works
+    // for any window size, not just whole minutes).
     std::string sql =
         "INSERT INTO limit_rate (endpoint, ip, request_count, window_start, blocked_status) "
         "VALUES ($1, $2, 1, NOW(), FALSE) "
         "ON CONFLICT (ip, endpoint) DO UPDATE SET "
         "request_count = CASE "
-            "WHEN NOW() - limit_rate.window_start > make_interval(mins => $3) THEN 1 "
+            "WHEN NOW() - limit_rate.window_start > make_interval(secs => $3) THEN 1 "
             "ELSE limit_rate.request_count + 1 "
         "END, "
         "window_start = CASE "
@@ -69,6 +72,6 @@ void SecurityRepository::updateAndCheckRateLimit(
             }
         },
         errorCallback,
-        endpoint, ip, windowMinutes, maxRequests
+        endpoint, ip, windowSeconds, maxRequests
     );
 }
