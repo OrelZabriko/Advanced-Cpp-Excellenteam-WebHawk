@@ -1,9 +1,11 @@
 #pragma once
+
 #include <drogon/HttpController.h>
 
 using namespace drogon;
 
-class SecurityController : public drogon::HttpController<SecurityController> {
+class SecurityController : public drogon::HttpController<SecurityController> 
+{
 public:
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(SecurityController::analyze, "/analyze", Post);

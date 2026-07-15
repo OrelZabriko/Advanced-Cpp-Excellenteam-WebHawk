@@ -1,5 +1,6 @@
 #include "SecurityService.h"
 #include "../repositories/SecurityRepository.h"
+#include "../utils/SecurityConfig.h"
 #include <algorithm>
 #include <regex>
 #include <iostream>
@@ -8,7 +9,8 @@
 // SQL Injection Detector:
 // Scans input for known SQLi patterns and returns true if a SQLi pattern is detected.
 // ============================================================
-bool SecurityService::detectSQLi(const std::string& input) {
+bool SecurityService::detectSQLi(const std::string& input) 
+{
     // Convert input to lowercase for case insensitive matching
     std::string lower = input;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
@@ -25,10 +27,9 @@ bool SecurityService::detectSQLi(const std::string& input) {
         std::regex("('\\s*or\\s+'.*'\\s*=\\s*')"),          // ' or 'a'='a'
     };
 
-    for (const auto& pattern : patterns) {
-        if (std::regex_search(lower, pattern)) {
-            return true;
-        }
+    for (const auto& pattern : patterns) 
+    {
+        if (std::regex_search(lower, pattern)) return true;
     }
     return false;
 }
@@ -38,7 +39,8 @@ bool SecurityService::detectSQLi(const std::string& input) {
 // Scans input for script tags and dangerous event handlers and
 // returns true if an XSS pattern is detected.
 // ============================================================
-bool SecurityService::detectXSS(const std::string& input) {
+bool SecurityService::detectXSS(const std::string& input) 
+{
     std::string lower = input;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
 
@@ -50,10 +52,9 @@ bool SecurityService::detectXSS(const std::string& input) {
         std::regex("(<\\s*object.*?>)"),                                // <object> tags
     };
 
-    for (const auto& pattern : patterns) {
-        if (std::regex_search(lower, pattern)) {
-            return true;
-        }
+    for (const auto& pattern : patterns) 
+    {
+        if (std::regex_search(lower, pattern)) return true;
     }
     return false;
 }
@@ -64,15 +65,23 @@ bool SecurityService::detectXSS(const std::string& input) {
 // For example, from: { "body": { "comment": "hello" }, "query_params": { "q": "test" } }
 // it will return: ["hello", "test"]
 // ============================================================
-static void collectAllStrings(const Json::Value& node, std::vector<std::string>& out) {
-    if (node.isString()) {
+static void collectAllStrings(const Json::Value& node, std::vector<std::string>& out) 
+{
+    if (node.isString()) 
+    {
         out.push_back(node.asString());
-    } else if (node.isObject()) {
-        for (const auto& key : node.getMemberNames()) {
+    } 
+    else if (node.isObject()) 
+    {
+        for (const auto& key : node.getMemberNames()) 
+        {
             collectAllStrings(node[key], out);
         }
-    } else if (node.isArray()) {
-        for (const auto& item : node) {
+    } 
+    else if (node.isArray()) 
+    {
+        for (const auto& item : node) 
+        {
             collectAllStrings(item, out);
         }
     }
@@ -87,7 +96,8 @@ void SecurityService::analyzeRequest(
     const Json::Value& requestPayload,
     std::function<void(bool allowed, const std::string& attackType, const std::string& reason)> successCallback,
     std::function<void(const std::string& error)> errorCallback
-) {
+) 
+{
     // Extract request metadata from the JSON (as defined in API Contracts doc)
     std::string endpoint = requestPayload.get("endpoint", "").asString();
     std::string method   = requestPayload.get("method", "").asString();
@@ -100,11 +110,14 @@ void SecurityService::analyzeRequest(
     collectAllStrings(requestPayload.get("body", Json::nullValue), allTexts);
 
     // --- Check 1: SQL Injection ---
-    for (const auto& text : allTexts) {
-        if (detectSQLi(text)) {
+    for (const auto& text : allTexts) 
+    {
+        if (detectSQLi(text)) 
+        {
             // Log to DB and return blocked verdict
             SecurityRepository::logRequest(endpoint, method, "sqli", true, ip,
-                [successCallback]() {
+                [successCallback]() 
+                {
                     successCallback(false, "sqli", "SQL injection pattern detected");
                 },
                 errorCallback
@@ -114,10 +127,13 @@ void SecurityService::analyzeRequest(
     }
 
     // --- Check 2: XSS ---
-    for (const auto& text : allTexts) {
-        if (detectXSS(text)) {
+    for (const auto& text : allTexts) 
+    {
+        if (detectXSS(text)) 
+        {
             SecurityRepository::logRequest(endpoint, method, "xss", true, ip,
-                [successCallback]() {
+                [successCallback]() 
+                {
                     successCallback(false, "xss", "XSS pattern detected");
                 },
                 errorCallback
@@ -127,23 +143,27 @@ void SecurityService::analyzeRequest(
     }
 
     // --- Check 3: Rate Limiting 
-    // Track requests per IP per endpoint in a time window (1 minute, max 100 requests)
-    // as specified in the project spec.
+    // Track requests per IP per endpoint in a sliding window, sized directly
+    // in seconds from .env (see SecurityConfig.h) - no unit conversion, so
+    // no precision loss for windows that aren't a whole number of minutes.
     SecurityRepository::updateAndCheckRateLimit(
         endpoint, ip,
-        1,    // window: 1 minute
-        100,  // max 100 requests per window
+        SecurityConfig::RATE_LIMIT_WINDOW_SECS(),
+        SecurityConfig::RATE_LIMIT_MAX_REQUESTS(),
         [endpoint, method, ip, successCallback, errorCallback](bool isBlocked) {
-            if (isBlocked) {
-                // Rate limit exceeded — log and block
+            if (isBlocked) 
+            {
+                // Rate limit exceeded - log and block
                 SecurityRepository::logRequest(endpoint, method, "rate_limit", true, ip,
                     [successCallback]() {
                         successCallback(false, "rate_limit", "Rate limit exceeded for this IP");
                     },
                     errorCallback
                 );
-            } else {
-                // All checks passed — log as clean and allow
+            } 
+            else 
+            {
+                // All checks passed - log as clean and allow
                 SecurityRepository::logRequest(endpoint, method, "", false, ip,
                     [successCallback]() {
                         successCallback(true, "", "");
@@ -155,4 +175,3 @@ void SecurityService::analyzeRequest(
         errorCallback
     );
 }
-

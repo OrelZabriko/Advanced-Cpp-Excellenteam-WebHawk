@@ -4,7 +4,8 @@
 #include <functional>
 #include <json/json.h>
 
-class SecurityService {
+class SecurityService 
+{
 public:
     // Basic Difficulty: SQL Injection detector
     static bool detectSQLi(const std::string& input);

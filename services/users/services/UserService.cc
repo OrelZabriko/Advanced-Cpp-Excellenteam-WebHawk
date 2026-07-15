@@ -1,5 +1,5 @@
 #include "UserService.h"
-#include "../utils/Config.h"
+#include "../utils/AuthConfig.h"
 #include "../repositories/UserRepository.h"
 #include "../repositories/SessionRepository.h"
 #include "../utils/HashUtils.h"
@@ -12,7 +12,8 @@ void UserService::registerUser(
     std::function<void()> onSuccess,
     std::function<void()> onDuplicate,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     std::string passwordHash = HashUtils::hashPassword(password);
     UserRepository::insert(email, passwordHash, onSuccess, onDuplicate, onError);
 }
@@ -24,7 +25,8 @@ void UserService::loginUser(
     std::function<void(const std::string &token)> onSuccess,
     std::function<void()> onInvalidCredentials,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     UserRepository::findByEmail(
         email,
         [password, ip, onSuccess, onInvalidCredentials, onError](int userId, const std::string &storedHash) {
@@ -36,12 +38,12 @@ void UserService::loginUser(
             using namespace jwt::params;
             auto token = jwt::jwt_object{
                 algorithm(jwt::algorithm::HS256),
-                secret(Config::JWT_SECRET()),
+                secret(AuthConfig::JWT_SECRET()),
                 payload({
                     {"user_id", std::to_string(userId)},
                 })
             };
-            token.add_claim("exp", std::time(nullptr) + Config::JWT_EXPIRY_SECS());
+            token.add_claim("exp", std::time(nullptr) + AuthConfig::JWT_EXPIRY_SECS());
 
             std::string tokenStr = token.signature();
 
@@ -65,7 +67,8 @@ void UserService::logoutUser(
     std::function<void()> onSuccess,
     std::function<void()> onNotFound,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     SessionRepository::revoke(tokenId, onSuccess, onNotFound, onError);
 }
 
@@ -74,8 +77,10 @@ void UserService::validateToken(
     std::function<void(int userId)> onValid,
     std::function<void(const std::string &reason)> onInvalid,
     std::function<void(const std::string &error)> onError
-) {
-    try {
+) 
+{
+    try 
+    {
         using namespace jwt::params;
         
         std::error_code ec;
@@ -83,11 +88,12 @@ void UserService::validateToken(
             token,
             algorithms({"HS256"}),
             ec,
-            secret(Config::JWT_SECRET()),
+            secret(AuthConfig::JWT_SECRET()),
             verify(true)
         );
 
-        if (ec) {
+        if (ec) 
+        {
             onInvalid("Invalid token: " + ec.message());
             return;
         }
@@ -106,7 +112,9 @@ void UserService::validateToken(
             }
         );
 
-    } catch (const std::exception &e) {
+    } 
+    catch (const std::exception &e) 
+    {
         onInvalid(std::string("Invalid token: ") + e.what());
     }
 }

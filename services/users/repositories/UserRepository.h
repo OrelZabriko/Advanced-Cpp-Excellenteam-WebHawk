@@ -1,9 +1,11 @@
 #pragma once
+
 #include <string>
 #include <functional>
 #include <drogon/drogon.h>
 
-class UserRepository {
+class UserRepository 
+{
 public:
     static void findByEmail(
         const std::string &email,

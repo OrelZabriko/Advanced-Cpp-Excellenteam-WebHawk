@@ -6,13 +6,17 @@ void UserRepository::findByEmail(
     std::function<void(int id, const std::string &passwordHash)> onFound,
     std::function<void()> onNotFound,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     DB_Repository::getInstance().run_query_params(
         "SELECT id, password_hash FROM users WHERE email = $1",
         [onFound, onNotFound](const drogon::orm::Result &result) {
-            if (result.empty()) {
+            if (result.empty()) 
+            {
                 onNotFound();
-            } else {
+            } 
+            else 
+            {
                 int id = result[0]["id"].as<int>();
                 std::string passwordHash = result[0]["password_hash"].as<std::string>();
                 onFound(id, passwordHash);
@@ -38,9 +42,12 @@ void UserRepository::insert(
             onSuccess();
         },
         [onDuplicate, onError](const std::string &error) {
-            if (error.find("duplicate key") != std::string::npos) {
+            if (error.find("duplicate key") != std::string::npos) 
+            {
                 onDuplicate();
-            } else {
+            } 
+            else 
+            {
                 onError(error);
             }
         },

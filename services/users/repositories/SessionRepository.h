@@ -1,9 +1,11 @@
 #pragma once
+
 #include <string>
 #include <functional>
 #include <drogon/drogon.h>
 
-class SessionRepository {
+class SessionRepository 
+{
 public:
     // Insert a new session after login
     static void insert(

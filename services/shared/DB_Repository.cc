@@ -11,7 +11,7 @@ DB_Repository::DB_Repository(const std::string& dbClientName) {
 
 // DB_Repository::getInstance: Returns the singleton instance of the repository (Thread-safe)
 DB_Repository& DB_Repository::getInstance() {
-    static DB_Repository instance; // נוצר פעם אחת בלבד בריצה הראשונה
+    static DB_Repository instance; // Created once in the first run.
     return instance;
 }
 
@@ -56,11 +56,13 @@ void DB_Repository::runSelectQuery(
     DbErrorCallback&& errorCallback,
     const std::string& selectFields,
     const std::string& condition
-) {
+) 
+{
     // Build the SQL query string based on the provided parameters
     std::string sqlQuery = "SELECT " + selectFields + " FROM " + sourceTable;
     
-    if (!condition.empty()) {
+    if (!condition.empty()) 
+    {
         sqlQuery += " WHERE " + condition;
     }
 

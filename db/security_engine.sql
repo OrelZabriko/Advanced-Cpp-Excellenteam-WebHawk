@@ -1,6 +1,6 @@
 -- ============================================================
 -- WebHawk Database Schema
--- Security Engine Tables (Owner: Nadav)
+-- Security Engine Tables
 -- ============================================================
 
 -- logs_security: audit trail of every request the security engine evaluates.
