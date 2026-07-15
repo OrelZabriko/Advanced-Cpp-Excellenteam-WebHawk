@@ -26,10 +26,15 @@ only from inside the Docker network, by service name (e.g.
 - **Passwords are hashed with bcrypt** (`services/users/utils/HashUtils.cc`),
   per the project spec - not a plain fast hash like SHA-256, since bcrypt's
   built-in salting and deliberately slow cost factor are what make password
-  hashes resistant to brute-force/rainbow-table attacks. Requires
-  `libbcrypt-dev` - already installed automatically inside `Dockerfile-users`;
-  only needed manually if running the users service natively (see the bottom
-  of this file).
+  hashes resistant to brute-force/rainbow-table attacks. There's no official
+  Ubuntu package for it, so it's built from source - already handled
+  automatically inside `Dockerfile-users`; only needed manually if running
+  the users service natively (see the bottom of this file).
+- **JWTs use `cpp-jwt`**, also built from source for the same reason (no
+  official Ubuntu package) - also handled automatically in `Dockerfile-users`.
+- Per Contract A in the API Contracts doc, `POST /analyze`'s response always
+  includes `attack_type` and `reason` - as explicit `null` on a clean/allowed
+  request, not omitted - so callers can rely on both fields always being present.
 
 ## Prerequisites
 
@@ -96,6 +101,51 @@ RATE_LIMIT_WINDOW_SECS=60
   Docker image. `.gitignore` only controls what goes into *git* - it has no
   effect on what `COPY . /app` puts inside an image, so without `.dockerignore`
   the real secrets in `.env` would end up inside the built image's layers.
+- **`RATE_LIMIT_WINDOW_SECS` is applied directly in seconds**, all the way
+  through `SecurityConfig` → `SecurityService` → `SecurityRepository` → SQL
+  (`make_interval(secs => ...)`). No conversion to minutes happens anywhere,
+  so any window size works precisely - not just whole-minute values.
+
+  **Why this used to be a real security bug, not just a precision nitpick:**
+  an earlier version converted the seconds value to whole minutes first,
+  using integer division (`seconds / 60`), before handing it to
+  `make_interval`. PostgreSQL's `make_interval` only accepts a whole integer
+  for its `mins` parameter (only its `secs` parameter supports fractions),
+  so this rounding was unavoidable as long as the window was expressed in
+  minutes at all. Two concrete failure cases:
+  - `RATE_LIMIT_WINDOW_SECS=90` (a 90-second window) → `90 / 60 = 1` minute
+    → the real window silently became **60 seconds**. The rate limit was
+    *weaker* than configured - an attacker could "reset" it a third sooner
+    than intended.
+  - `RATE_LIMIT_WINDOW_SECS=30` (a 30-second window) → `30 / 60 = 0` minutes,
+    clamped up to `1` → the real window silently became **60 seconds**. This
+    time the rate limit was *stricter* than configured - legitimate users
+    could stay blocked twice as long as intended.
+
+  Both directions matched the exact same `.env` variable name
+  (`RATE_LIMIT_WINDOW_SECS`) claiming to be in seconds while actually
+  behaving differently underneath - whoever tunes this value for a security
+  requirement (e.g. "block for 90s after abuse") would have no way to know,
+  from reading `.env` alone, that the real system enforced something else.
+  Switching the whole chain to seconds (using `make_interval`'s `secs`
+  parameter, the one that natively supports fractional/precise values)
+  removes the conversion entirely, so the configured value and the actual
+  behavior can never drift apart.
+- **Line endings**: `.gitattributes` forces `eol=lf` on all text files. This
+  repo previously had a CRLF/LF mix between `services/users` and
+  `services/security-engine`, which was also the root cause of a real bug -
+  a trailing `\r` ending up inside `DB_HOST`'s value when `.env` was saved
+  with Windows line endings (`EnvLoader.h` now strips it defensively too,
+  but don't rely on that - keep files LF).
+- **`.vscode/c_cpp_properties.json` is committed** (the only file inside
+  `.vscode/` that is - see `.gitignore`) so IntelliSense works the same for
+  everyone. It points at each service's `compile_commands.json`, which CMake
+  generates automatically (`CMAKE_EXPORT_COMPILE_COMMANDS ON`, already set in
+  both `CMakeLists.txt`) the first time you run `cmake ..` in that service's
+  `build/` folder - so build each service at least once, then reload VS Code
+  and pick the matching configuration (bottom-right of the window, or
+  `Ctrl+Shift+P` → "C/C++: Select a Configuration") for whichever service
+  you're editing.
 
 ### 3. Run everything
 
@@ -131,8 +181,23 @@ Only needed if you want to build/run one service directly on your machine,
 outside Docker, for faster debugging - not the normal way to use the project.
 
 Install locally: Drogon (course install script; confirm with
-`ls /usr/local/include/drogon/drogon.h`) and `libbcrypt-dev`
-(`sudo apt-get install libbcrypt-dev`, needed by the users service only).
+`ls /usr/local/include/drogon/drogon.h`), and two libraries with no official
+Ubuntu package - build both from source:
+```bash
+# libbcrypt (password hashing)
+git clone https://github.com/trusch/libbcrypt
+cd libbcrypt && mkdir build && cd build
+cmake .. && make
+sudo make install && sudo ldconfig
+cd ../..
+
+# cpp-jwt (JWT signing/verification) - needs libssl-dev
+sudo apt-get install -y libssl-dev
+git clone https://github.com/arun11299/cpp-jwt
+cd cpp-jwt && mkdir build && cd build
+cmake .. && sudo make install
+cd ../..
+```
 Start Postgres yourself (`sudo service postgresql start`, then
 `ALTER USER postgres WITH PASSWORD 'webhawk123'; CREATE DATABASE webhawk;`
 via `psql`), and set `DB_HOST=127.0.0.1` in your local `.env` for this.
@@ -149,3 +214,8 @@ Run it from the **service's own folder** (not from `build/`), so
 `config.json` and the relative path to the root `.env` resolve correctly.
 Only run **one** service this way at a time - they all listen on port 8080,
 so two running natively at once on the same machine will conflict.
+
+This same `cmake ..` also generates `compile_commands.json` in that service's
+`build/` folder, which is what `.vscode/c_cpp_properties.json` points at for
+IntelliSense (see above) - so this step is worth doing even if you don't
+plan to actually run the service natively, just to fix editor include errors.

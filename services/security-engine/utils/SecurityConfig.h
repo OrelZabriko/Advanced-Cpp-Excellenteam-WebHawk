@@ -18,10 +18,11 @@ public:
         return val ? std::stoi(val) : 100;
     }
 
-    // Size of the sliding window, in seconds. Stored in seconds here for
-    // consistency with the other *_SECS values in .env, but
-    // SecurityRepository::updateAndCheckRateLimit expects whole minutes -
-    // see the conversion (and its rounding caveat) in SecurityService.cc.
+    // Size of the sliding window, in seconds. Kept in seconds end-to-end -
+    // SecurityConfig -> SecurityService -> SecurityRepository -> SQL's
+    // make_interval(secs => ...) - with no unit conversion anywhere in that
+    // chain. Don't convert this to minutes: an earlier version did, and the
+    // rounding silently changed the real rate-limit window (see README.md).
     static int RATE_LIMIT_WINDOW_SECS() 
     {
         EnvLoader::ensureLoaded();
