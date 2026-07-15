@@ -56,11 +56,13 @@ void DB_Repository::runSelectQuery(
     DbErrorCallback&& errorCallback,
     const std::string& selectFields,
     const std::string& condition
-) {
+) 
+{
     // Build the SQL query string based on the provided parameters
     std::string sqlQuery = "SELECT " + selectFields + " FROM " + sourceTable;
     
-    if (!condition.empty()) {
+    if (!condition.empty()) 
+    {
         sqlQuery += " WHERE " + condition;
     }
 

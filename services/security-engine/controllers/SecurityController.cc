@@ -1,10 +1,12 @@
 #include "SecurityController.h"
 #include "../services/SecurityService.h"
 
-void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) 
+{
     // Parse the JSON body 
     auto json = req->getJsonObject();
-    if (!json) {
+    if (!json) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Invalid JSON body"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
@@ -12,7 +14,8 @@ void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(c
     }
 
     // Validate required fields 
-    if (!json->isMember("endpoint") || !json->isMember("method") || !json->isMember("ip")) {
+    if (!json->isMember("endpoint") || !json->isMember("method") || !json->isMember("ip")) 
+    {
         Json::Value error;
         error["error"] = "Missing required fields: endpoint, method, ip";
         auto resp = HttpResponse::newHttpJsonResponse(error);

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <functional>
 #include <memory>
@@ -8,7 +9,8 @@ using DbSelectCallback = std::function<void(const drogon::orm::Result&)>;
 using DbUpdateCallback = std::function<void(size_t rowsAffected)>;
 using DbErrorCallback  = std::function<void(const std::string& errorMsg)>;
 
-class DB_Repository {
+class DB_Repository 
+{
 private:
     drogon::orm::DbClientPtr dbClient;
     DB_Repository(const std::string& dbClientName = "default");
@@ -58,7 +60,8 @@ public:
         DbUpdateCallback successCallback,
         DbErrorCallback errorCallback,
         Args&&... args
-    ) {
+    ) 
+    {
         dbClient->execSqlAsync(
             sqlQuery,
             [successCallback](const drogon::orm::Result& result) {

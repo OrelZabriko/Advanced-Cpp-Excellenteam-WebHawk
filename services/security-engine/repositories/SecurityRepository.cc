@@ -10,7 +10,8 @@ void SecurityRepository::logRequest(
     const std::string& ip,
     std::function<void()> successCallback,
     std::function<void(const std::string& error)> errorCallback
-) {
+) 
+{
     // Use a prepared statement with $1..$5 to prevent SQL injection.
     // NULLIF($3, '') stores NULL in attack_type when the request is clean (empty string).
     std::string sql =
@@ -34,7 +35,8 @@ void SecurityRepository::updateAndCheckRateLimit(
     int maxRequests,
     std::function<void(bool isBlocked)> successCallback,
     std::function<void(const std::string& error)> errorCallback
-) {
+) 
+{
     // Use a prepared statement with $1..$4 to prevent SQL injection.
     // make_interval(mins => $3) safely converts the integer parameter to a PostgreSQL interval.
     std::string sql =

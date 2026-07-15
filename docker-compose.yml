@@ -19,9 +19,59 @@ services:
       context: .
       dockerfile: Dockerfile-security
     container_name: webhawk_security
-    ports:
-      - "8081:8081"
+    # No external "ports:" - reachable only from inside the Docker network
+    # (i.e. only by the middleware, once it exists), matching the final
+    # architecture: the middleware is the project's single public entry point.
     depends_on:
       - postgres
+    env_file:
+      - .env
+    environment:
+      # Overrides DB_HOST from .env - inside Docker, "postgres" is the
+      # service name above, resolved automatically by Docker's internal DNS.
+      - DB_HOST=postgres
+
+  users:
+    build:
+      context: .
+      dockerfile: Dockerfile-users
+    container_name: webhawk_users
+    # No external "ports:" - same reasoning as security_engine above.
+    depends_on:
+      - postgres
+    env_file:
+      - .env
     environment:
       - DB_HOST=postgres
+
+  # backend-registry: not built yet (Orel). Uncomment once
+  # services/backend-registry has a Dockerfile-backend-registry.
+  # backend-registry:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-backend-registry
+  #   container_name: webhawk_backend_registry
+  #   depends_on:
+  #     - postgres
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DB_HOST=postgres
+
+  # middleware: not built yet (Orel). Uncomment once middleware has a
+  # Dockerfile-middleware. This is the ONLY service meant to be reachable
+  # from outside Docker - the project's single public entry point.
+  # middleware:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-middleware
+  #   container_name: webhawk_middleware
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - postgres
+  #     - security_engine
+  #     - users
+  #     - backend-registry
+  #   env_file:
+  #     - .env

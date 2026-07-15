@@ -17,4 +17,4 @@ add_executable(${PROJECT_NAME}
     ../../shared/DB_Repository.cc
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon cryptopp cpp-jwt::cpp-jwt)
+target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon bcrypt cpp-jwt::cpp-jwt)

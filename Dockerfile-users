@@ -1,0 +1,16 @@
+FROM drogonframework/drogon:latest
+
+# Install dependencies:
+# - libpq-dev: Postgres client library required by Drogon for DB access
+# - libbcrypt-dev: password hashing (see services/users/utils/HashUtils.cc)
+RUN apt-get update && apt-get install -y libpq-dev libbcrypt-dev
+
+WORKDIR /app
+COPY . /app
+
+WORKDIR /app/services/users/build
+RUN cmake .. && make
+
+WORKDIR /app/services/users
+# Run the compiled server
+CMD ["./build/users_service"]

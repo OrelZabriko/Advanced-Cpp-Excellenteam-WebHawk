@@ -1,8 +1,10 @@
 #pragma once
+
 #include <string>
 #include <functional>
 
-class UserService {
+class UserService 
+{
 public:
     // Register a new user
     static void registerUser(

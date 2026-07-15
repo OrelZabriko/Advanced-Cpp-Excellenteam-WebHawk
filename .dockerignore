@@ -1,0 +1,7 @@
+# .gitignore does NOT affect what `COPY . /app` bakes into a Docker image -
+# only .dockerignore does. Without this file, .env (real secrets) would get
+# copied straight into the image layers. Secrets are injected at runtime
+# instead, via `env_file: .env` in docker-compose.yml.
+.env
+.git/
+**/build/

@@ -3,7 +3,8 @@
 #include <string>
 #include <functional>
 
-class SecurityRepository {
+class SecurityRepository 
+{
 public:
     // Log the outcome of a request analysis into the logs_security table
     static void logRequest(
