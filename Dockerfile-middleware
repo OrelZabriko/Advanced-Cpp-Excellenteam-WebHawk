@@ -1,0 +1,15 @@
+FROM drogonframework/drogon:latest
+
+# No extra libraries needed - the middleware only uses Drogon (including
+# its built-in HttpClient for calling the other three services) and the
+# C++ standard library. No libpq-dev, because unlike the other services it
+# never talks to Postgres directly.
+
+WORKDIR /app
+COPY . /app
+
+WORKDIR /app/middleware/build
+RUN cmake .. && make
+
+WORKDIR /app/middleware
+CMD ["./build/middleware"]

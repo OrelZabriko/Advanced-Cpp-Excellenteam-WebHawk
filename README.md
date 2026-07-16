@@ -35,6 +35,17 @@ only from inside the Docker network, by service name (e.g.
 - Per Contract A in the API Contracts doc, `POST /analyze`'s response always
   includes `attack_type` and `reason` - as explicit `null` on a clean/allowed
   request, not omitted - so callers can rely on both fields always being present.
+- **`backend-registry`'s API keys are shown exactly once** - at creation time
+  (`POST /backends`). `GET /backends` (the listing endpoint) never returns
+  `api_key` for any registration, the same way a real secret/API key is
+  normally handled - otherwise anyone with list access could read out every
+  backend's live credential.
+- **The middleware identifies which registered backend to use via an
+  `X-API-Key` header** on every request it receives. This is a judgment
+  call, not a locked-in team decision - the API Contracts doc defines the
+  *lookup* (Contract B: given an api_key, find the target) but not how that
+  key travels on the request. Confirm this with the team before treating it
+  as final (see `middleware/services/ProxyService.h` for the same note in code).
 
 ## Prerequisites
 
@@ -89,6 +100,14 @@ RATE_LIMIT_WINDOW_SECS=60
   - `services/security-engine/utils/SecurityConfig.h` - `RATE_LIMIT_*`, used only by security-engine
 - Each service's `main.cc` builds its DB connection from `DbConfig::HOST()` etc.
   in code - `config.json` no longer contains credentials, only the port it listens on.
+- **`.env` is read by two separate mechanisms, not one:** (1) `services/shared/EnvLoader.h`,
+  used by each Drogon service at runtime (`DbConfig::HOST()` etc.), and (2) **Docker
+  Compose itself**, which automatically substitutes `${VAR}` anywhere in
+  `docker-compose.yml` from a file literally named `.env` at the repo root - this
+  is a built-in Compose feature, not something this project added. That's how
+  `postgres`'s own `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` avoid being
+  hardcoded in `docker-compose.yml`: they're `${DB_USER}`/`${DB_PASSWORD}`/`${DB_NAME}`,
+  resolved from the same `.env` every Drogon service already reads.
 - **`.env` syntax rule**: each line must be `KEY=VALUE` only - no spaces around
   `=`, and no trailing comment on a value line. Only a line that starts with
   `#` is treated as a comment (see `EnvLoader.h`); `DB_HOST=postgres # docker`
@@ -155,20 +174,26 @@ docker compose up --build
 This builds and starts every service as its own container on one Docker
 network, and initializes Postgres automatically from the `.sql` files in `db/`.
 
-**Only the middleware is reachable from outside Docker** (`localhost:8080`,
-once it's built). `users`, `security-engine`, and `backend-registry` have no
-external port at all - there's no meaningful way to call them directly from
-outside Docker, by design. End-to-end testing happens once the middleware
-exists, by hitting `localhost:8080` and letting it route the request through
-the rest of the system.
+**Only the middleware is reachable from outside Docker** (`localhost:8080`).
+`users`, `security-engine`, and `backend-registry` have no external port at
+all - there's no meaningful way to call them directly from outside Docker,
+by design. End-to-end testing happens by hitting `localhost:8080` and
+letting the middleware route the request through the rest of the system.
+
+`middleware` and `services/backend-registry` are newly added and, unlike
+`users`/`security-engine`, have not yet been verified against a real build -
+expect (and report back) compiler errors on the first `docker compose up --build`
+that includes them, the same way `users` needed a few rounds of fixes
+(`bcrypt`, `cpp-jwt`) before it built cleanly.
 
 ## Postman
 
 Test collections live in `postman/`. `webhawk_security_engine.postman_collection.json`
 targets `/analyze` directly on port 8081 - that was written back when the
-service was reachable directly. Once the middleware is live, testing should
-go through it instead (`localhost:8080`), and this collection will need
-updating accordingly.
+service was reachable directly. Now that the middleware exists, testing
+should go through it instead (`localhost:8080`, with an `X-API-Key` header
+identifying which registered backend to use - see Security notes above),
+and this collection still needs updating accordingly.
 
 ## Database
 
@@ -191,8 +216,9 @@ cmake .. && make
 sudo make install && sudo ldconfig
 cd ../..
 
-# cpp-jwt (JWT signing/verification) - needs libssl-dev
-sudo apt-get install -y libssl-dev
+# cpp-jwt (JWT signing/verification) - needs libssl-dev, nlohmann-json3-dev,
+# and libgtest-dev (its default build also compiles its own test suite)
+sudo apt-get install -y libssl-dev nlohmann-json3-dev libgtest-dev
 git clone https://github.com/arun11299/cpp-jwt
 cd cpp-jwt && mkdir build && cd build
 cmake .. && sudo make install
