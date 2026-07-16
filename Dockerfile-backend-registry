@@ -1,0 +1,15 @@
+FROM drogonframework/drogon:latest
+
+# libpq-dev: Postgres client library required by Drogon for DB access.
+# No other external libraries needed - this service only uses Drogon + the
+# C++ standard library (ApiKeyGenerator uses <random>, already built in).
+RUN apt-get update && apt-get install -y libpq-dev
+
+WORKDIR /app
+COPY . /app
+
+WORKDIR /app/services/backend-registry/build
+RUN cmake .. && make
+
+WORKDIR /app/services/backend-registry
+CMD ["./build/backend_registry"]
