@@ -23,11 +23,8 @@ void BackendRepository::insert(
         [onDuplicate, onError](const std::string& error) {
             // Same duplicate-detection pattern as UserRepository::insert -
             // relies on the api_key UNIQUE constraint in backend_registry.sql.
-            if (error.find("duplicate key") != std::string::npos) {
-                onDuplicate();
-            } else {
-                onError(error);
-            }
+            if (error.find("duplicate key") != std::string::npos) onDuplicate();
+            else onError(error);
         },
         serviceName, targetUrl, apiKey
     );
@@ -85,7 +82,7 @@ void BackendRepository::updateActiveStatus(
 }
 
 void BackendRepository::findAll(
-    std::function<void(const drogon::orm::Result& rows)> onSuccess,
+    std::function<void(Json::Value backends)> onSuccess,
     std::function<void(const std::string& error)> onError
 ) 
 {
@@ -94,7 +91,24 @@ void BackendRepository::findAll(
     DB_Repository::getInstance().run_query(
         "SELECT id, service_name, target_url, active, created_at FROM backend_registration ORDER BY id",
         [onSuccess](const drogon::orm::Result& result) {
-            onSuccess(result);
+            // The row-by-row conversion happens HERE, inside this .cc file -
+            // this is the only place in the whole backend-registry service
+            // that ever names drogon::orm::Result. This file already has
+            // Drogon's full definitions (via the DB_Repository.h include
+            // above), so iterating over `result` is safe here in a way it
+            // would not be from a header that only forward-declares it.
+            Json::Value list(Json::arrayValue);
+            for (const auto &row : result) 
+            {
+                Json::Value item;
+                item["id"] = row["id"].as<int>();
+                item["service_name"] = row["service_name"].as<std::string>();
+                item["target_url"] = row["target_url"].as<std::string>();
+                item["active"] = row["active"].as<bool>();
+                item["created_at"] = row["created_at"].as<std::string>();
+                list.append(item);
+            }
+            onSuccess(list);
         },
         [onError](const std::string& error) {
             onError(error);

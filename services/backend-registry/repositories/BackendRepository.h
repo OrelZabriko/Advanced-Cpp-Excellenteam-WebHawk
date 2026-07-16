@@ -2,8 +2,15 @@
 
 #include <string>
 #include <functional>
-#include <drogon/orm/Result.h>
+#include <json/json.h>
 
+// No Drogon include here at all - unlike some other repository headers in
+// this project, this one is written so it structurally CANNOT hit the
+// "incomplete type" problem: it never names a Drogon DB type (like
+// drogon::orm::Result) in its own interface. All of that stays inside
+// BackendRepository.cc, which gets the FULL Drogon definitions transitively
+// through "../../shared/DB_Repository.h" - so there is only ever one file
+// in this class that needs to know Drogon's DB types exist at all.
 class BackendRepository 
 {
 public:
@@ -41,8 +48,13 @@ public:
     // List every registered backend - the "management" half of "manage and
     // update registered services". api_key is intentionally NOT included
     // here (see BackendService::listAll for why).
+    //
+    // Returns already-converted JSON, not a raw drogon::orm::Result - the
+    // row-by-row conversion happens inside BackendRepository.cc (which has
+    // the full Drogon types available), specifically so this header never
+    // has to name a Drogon type to describe what this function returns.
     static void findAll(
-        std::function<void(const drogon::orm::Result& rows)> onSuccess,
+        std::function<void(Json::Value backends)> onSuccess,
         std::function<void(const std::string& error)> onError
     );
 

@@ -62,25 +62,10 @@ void BackendService::listAll(
     std::function<void(const std::string& error)> onError
 ) 
 {
-    BackendRepository::findAll(
-        [onSuccess](const drogon::orm::Result& rows) {
-            Json::Value list(Json::arrayValue);
-            for (const auto &row : rows) 
-            {
-                Json::Value item;
-                item["id"] = row["id"].as<int>();
-                item["service_name"] = row["service_name"].as<std::string>();
-                item["target_url"] = row["target_url"].as<std::string>();
-                item["active"] = row["active"].as<bool>();
-                item["created_at"] = row["created_at"].as<std::string>();
-                // api_key intentionally omitted - see the header comment
-                // on listAll for why.
-                list.append(item);
-            }
-            onSuccess(list);
-        },
-        onError
-    );
+    // BackendRepository::findAll already returns ready-to-use JSON (with
+    // api_key omitted) - nothing left for this layer to transform, so this
+    // is a direct pass-through.
+    BackendRepository::findAll(onSuccess, onError);
 }
 
 void BackendService::updateBackend(
