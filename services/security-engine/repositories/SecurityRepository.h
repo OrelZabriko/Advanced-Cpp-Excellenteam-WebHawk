@@ -6,7 +6,7 @@
 class SecurityRepository 
 {
 public:
-    // Log the outcome of a request analysis into the logs_security table
+    // Log the outcome of a request analysis into the security_logs table
     static void logRequest(
         const std::string& endpoint,
         const std::string& method,
