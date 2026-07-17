@@ -91,12 +91,10 @@ void BackendRepository::findAll(
     DB_Repository::getInstance().run_query(
         "SELECT id, service_name, target_url, active, created_at FROM backend_registration ORDER BY id",
         [onSuccess](const drogon::orm::Result& result) {
-            // The row-by-row conversion happens HERE, inside this .cc file -
-            // this is the only place in the whole backend-registry service
-            // that ever names drogon::orm::Result. This file already has
-            // Drogon's full definitions (via the DB_Repository.h include
-            // above), so iterating over `result` is safe here in a way it
-            // would not be from a header that only forward-declares it.
+            // The row-by-row conversion happens HERE, inside this .cc file. drogon::orm::Result also appears above in insert() and
+            // findByApiKey() (any query that reads rows back needs it) - but it never crosses into BackendRepository.h or into
+            // BackendService.cc/.h, which is the property that actually matters: no other file in backend-registry needs to know
+            // this type exists, so the "incomplete type" problem we hit before can't recur outside this one file.
             Json::Value list(Json::arrayValue);
             for (const auto &row : result) 
             {
