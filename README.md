@@ -228,7 +228,7 @@ cmake .. && sudo make install
 cd ../..
 ```
 Start Postgres yourself (`sudo service postgresql start`, then
-`ALTER USER postgres WITH PASSWORD 'webhawk123'; CREATE DATABASE webhawk;`
+`ALTER USER postgres WITH PASSWORD '<your DB_PASSWORD from .env>'; CREATE DATABASE <your DB_NAME from .env>;`
 via `psql`), and set `DB_HOST=127.0.0.1` in your local `.env` for this.
 
 Then, for any one service:
@@ -239,25 +239,14 @@ cmake .. && make
 cd ..
 ./build/<executable-name>
 ```
-Run it from the **service's own folder** (not from `build/`), so
-`config.json` and the relative path to the root `.env` resolve correctly.
-Only run **one** service this way at a time - they all listen on port 8080,
-so two running natively at once on the same machine will conflict.
+Run it from the **service's own folder** (not from `build/`), so `config.json` and the relative path to the root `.env` resolve correctly. Only run **one** service this way at a time - they all listen on port 8080, so two running natively at once on the same machine will conflict.
 
-This same `cmake ..` also generates `compile_commands.json` in that service's
-`build/` folder, which is what `.vscode/c_cpp_properties.json` points at for
-IntelliSense (see above) - so this step is worth doing even if you don't
-plan to actually run the service natively, just to fix editor include errors.
+This same `cmake ..` also generates `compile_commands.json` in that service's `build/` folder, which is what `.vscode/c_cpp_properties.json` points at for IntelliSense (see above) - so this step is worth doing even if you don't plan to actually run the service natively, just to fix editor include errors.
 
 
 ## Postman
 
-Test collections live in `postman/`. `webhawk_security_engine.postman_collection.json`
-targets `/analyze` directly on port 8081 - that was written back when the
-service was reachable directly. Now that the middleware exists, testing
-should go through it instead (`localhost:8080`, with an `X-API-Key` header
-identifying which registered backend to use - see Security notes above),
-and this collection still needs updating accordingly.
+Test collections live in `postman/`. `webhawk_security_engine.postman_collection.json` documents the **intermediate testing** done directly against security-engine on port 8081, back when the middleware didn't exist yet and the service was reachable on its own - kept as-is, as a record of that stage. A separate, final collection - testing the whole system end-to-end through the middleware (`localhost:8080`, with an `X-API-Key` header identifying which registered backend to use - see Security notes above) - will be added once that flow is verified working.
 
 
 ## Postman Examples
