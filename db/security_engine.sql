@@ -3,7 +3,7 @@
 -- Security Engine Tables
 -- ============================================================
 
--- logs_security: audit trail of every request the security engine evaluates.
+-- security_logs: audit trail of every request the security engine evaluates.
 -- Every request (clean or malicious) gets a row here.
 -- This table is also the source for the analytics dashboard (bonus).
 CREATE TABLE IF NOT EXISTS security_logs (
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS security_logs (
     timestamp   TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
--- limit_rate: running counter of request volume per IP per endpoint.
+-- rate_limit: running counter of request volume per IP per endpoint.
 -- Rate-limit abuse can only be detected across multiple requests over time,
 -- so we need state here (unlike SQLi/XSS which only look at a single request).
 -- UNIQUE(ip, endpoint) ensures one row per IP+endpoint pair — we UPDATE it, not INSERT each time.

@@ -1,5 +1,6 @@
 #include "BackendController.h"
 #include "../services/BackendService.h"
+#include <vector>
 
 void BackendController::registerBackend(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) 
 {

@@ -15,7 +15,7 @@ void SecurityRepository::logRequest(
     // Use a prepared statement with $1..$5 to prevent SQL injection.
     // NULLIF($3, '') stores NULL in attack_type when the request is clean (empty string).
     std::string sql =
-        "INSERT INTO logs_security (endpoint, method, attack_type, blocked, ip) "
+        "INSERT INTO security_logs (endpoint, method, attack_type, blocked, ip) "
         "VALUES ($1, $2, NULLIF($3, ''), $4, $5);";
 
     DB_Repository::getInstance().run_update_query_params(
@@ -43,21 +43,21 @@ void SecurityRepository::updateAndCheckRateLimit(
     // no unit conversion needed (unlike the old mins => version, this works
     // for any window size, not just whole minutes).
     std::string sql =
-        "INSERT INTO limit_rate (endpoint, ip, request_count, window_start, blocked_status) "
+        "INSERT INTO rate_limit (endpoint, ip, request_count, window_start, blocked_status) "
         "VALUES ($1, $2, 1, NOW(), FALSE) "
         "ON CONFLICT (ip, endpoint) DO UPDATE SET "
         "request_count = CASE "
-            "WHEN NOW() - limit_rate.window_start > make_interval(secs => $3) THEN 1 "
-            "ELSE limit_rate.request_count + 1 "
+            "WHEN NOW() - rate_limit.window_start > make_interval(secs => $3) THEN 1 "
+            "ELSE rate_limit.request_count + 1 "
         "END, "
         "window_start = CASE "
-            "WHEN NOW() - limit_rate.window_start > make_interval(secs => $3) THEN NOW() "
-            "ELSE limit_rate.window_start "
+            "WHEN NOW() - rate_limit.window_start > make_interval(secs => $3) THEN NOW() "
+            "ELSE rate_limit.window_start "
         "END, "
         "blocked_status = CASE "
-            "WHEN NOW() - limit_rate.window_start > make_interval(secs => $3) THEN FALSE "
-            "WHEN limit_rate.request_count + 1 > $4 THEN TRUE "
-            "ELSE limit_rate.blocked_status "
+            "WHEN NOW() - rate_limit.window_start > make_interval(secs => $3) THEN FALSE "
+            "WHEN rate_limit.request_count + 1 > $4 THEN TRUE "
+            "ELSE rate_limit.blocked_status "
         "END "
         "RETURNING blocked_status;";
 
