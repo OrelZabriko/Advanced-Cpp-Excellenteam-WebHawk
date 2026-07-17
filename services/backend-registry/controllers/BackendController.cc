@@ -15,7 +15,18 @@ void BackendController::registerBackend(const HttpRequestPtr &req, std::function
     if (!json->isMember("service_name") || !json->isMember("target_url")) 
     {
         Json::Value error;
-        error["error"] = "Missing required fields: service_name, target_url";
+        std::vector<std::string> missing;
+        if (!json->isMember("service_name")) missing.push_back("service_name");
+        if (!json->isMember("target_url")) missing.push_back("target_url");
+
+        std::string missingStr;
+        for (size_t i = 0; i < missing.size(); ++i) 
+        {
+            missingStr += missing[i];
+            if (i + 1 < missing.size()) missingStr += ", ";
+        }
+        
+        error["error"] = "Missing required field(s): " + missingStr;
         auto resp = HttpResponse::newHttpJsonResponse(error);
         resp->setStatusCode(k400BadRequest);
         callback(resp);
@@ -65,7 +76,8 @@ void BackendController::lookup(const HttpRequestPtr &req, std::function<void(con
 {
     std::string apiKey = req->getParameter("api_key");
 
-    if (apiKey.empty()) {
+    if (apiKey.empty()) 
+    {
         Json::Value error;
         error["error"] = "Missing required query parameter: api_key";
         auto resp = HttpResponse::newHttpJsonResponse(error);
@@ -179,7 +191,8 @@ void BackendController::updateBackend(const HttpRequestPtr &req, std::function<v
 void BackendController::setStatus(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback, int id) 
 {
     auto json = req->getJsonObject();
-    if (!json || !json->isMember("active")) {
+    if (!json || !json->isMember("active")) 
+    {
         Json::Value error;
         error["error"] = "Missing required field: active (boolean)";
         auto resp = HttpResponse::newHttpJsonResponse(error);
