@@ -3,6 +3,16 @@
 WebHawk is a security middleware platform: every incoming request is checked for
 SQL injection, XSS, and rate-limit abuse before it's forwarded to the real backend it's protecting.
 
+
+## Team
+
+| Name | ID | Email |
+|---|---|---|
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
 ## Services
 
 | Service | Internal port | Reachable from outside Docker? |
@@ -20,6 +30,7 @@ container with its own isolated network namespace. Only the middleware's
 container publishes its port to the host; every other service is reachable
 only from inside the Docker network, by service name (e.g.
 `http://security-engine:8080/analyze`).
+
 
 ## Security notes
 
@@ -44,14 +55,15 @@ only from inside the Docker network, by service name (e.g.
   `X-API-Key` header** on every request it receives. This is a judgment
   call, not a locked-in team decision - the API Contracts doc defines the
   *lookup* (Contract B: given an api_key, find the target) but not how that
-  key travels on the request. Confirm this with the team before treating it
-  as final (see `middleware/services/ProxyService.h` for the same note in code).
+  key travels on the request. 
+
 
 ## Prerequisites
 
 - Docker + Docker Compose
 - This project is developed inside **WSL (Ubuntu)** - not native Windows -
   but everything below runs the same way once Docker is installed.
+
 
 ## Setup
 
@@ -99,7 +111,7 @@ RATE_LIMIT_WINDOW_SECS=60
   - `services/users/utils/AuthConfig.h` - `JWT_*`, used only by users
   - `services/security-engine/utils/SecurityConfig.h` - `RATE_LIMIT_*`, used only by security-engine
 - Each service's `main.cc` builds its DB connection from `DbConfig::HOST()` etc.
-  in code - `config.json` no longer contains credentials, only the port it listens on.
+  in code; `config.json` only defines the port it listens on.
 - **`.env` is read by two separate mechanisms, not one:** (1) `services/shared/EnvLoader.h`,
   used by each Drogon service at runtime (`DbConfig::HOST()` etc.), and (2) **Docker
   Compose itself**, which automatically substitutes `${VAR}` anywhere in
@@ -113,9 +125,6 @@ RATE_LIMIT_WINDOW_SECS=60
   `#` is treated as a comment (see `EnvLoader.h`); `DB_HOST=postgres # docker`
   would be parsed as the literal value `postgres # docker` and break the
   connection.
-- `.gitignore` intentionally does **not** exclude `services/*/config.json`
-  anymore - those files no longer contain credentials (see above), so they're
-  safe to commit and keep in sync across the team. Only `.env` itself is excluded.
 - **`.dockerignore`** (repo root) exists so `.env` never gets baked into a
   Docker image. `.gitignore` only controls what goes into *git* - it has no
   effect on what `COPY . /app` puts inside an image, so without `.dockerignore`
@@ -166,6 +175,7 @@ RATE_LIMIT_WINDOW_SECS=60
   `Ctrl+Shift+P` → "C/C++: Select a Configuration") for whichever service
   you're editing.
 
+
 ### 3. Run everything
 
 ```bash
@@ -186,19 +196,12 @@ expect (and report back) compiler errors on the first `docker compose up --build
 that includes them, the same way `users` needed a few rounds of fixes
 (`bcrypt`, `cpp-jwt`) before it built cleanly.
 
-## Postman
-
-Test collections live in `postman/`. `webhawk_security_engine.postman_collection.json`
-targets `/analyze` directly on port 8081 - that was written back when the
-service was reachable directly. Now that the middleware exists, testing
-should go through it instead (`localhost:8080`, with an `X-API-Key` header
-identifying which registered backend to use - see Security notes above),
-and this collection still needs updating accordingly.
 
 ## Database
 
 Schema lives in `db/` as plain `.sql` files, loaded automatically by the
 `postgres` container on first start (via `docker-entrypoint-initdb.d`).
+
 
 ## Debugging a single service natively (optional)
 
@@ -245,3 +248,30 @@ This same `cmake ..` also generates `compile_commands.json` in that service's
 `build/` folder, which is what `.vscode/c_cpp_properties.json` points at for
 IntelliSense (see above) - so this step is worth doing even if you don't
 plan to actually run the service natively, just to fix editor include errors.
+
+
+## Postman
+
+Test collections live in `postman/`. `webhawk_security_engine.postman_collection.json`
+targets `/analyze` directly on port 8081 - that was written back when the
+service was reachable directly. Now that the middleware exists, testing
+should go through it instead (`localhost:8080`, with an `X-API-Key` header
+identifying which registered backend to use - see Security notes above),
+and this collection still needs updating accordingly.
+
+
+## Postman Examples
+
+<!-- Fill in with real request/response examples once the middleware is verified end-to-end. -->
+
+### Request
+
+```
+
+```
+
+### Response
+
+```
+
+```
