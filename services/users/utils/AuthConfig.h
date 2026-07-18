@@ -25,7 +25,10 @@ public:
         return std::string(val);
     }
 
-    // JWT signing algorithm name, as passed to the jwt-cpp library.
+    // Raw algorithm name from .env, as-is - no validation, no enum mapping
+    // here. Consumed two different ways downstream: passed directly as a
+    // string to jwt::decode() (validateToken), or converted to an enum via
+    // algorithmEnum() below when signing a new token (loginUser).
     static std::string JWT_ALGORITHM() 
     {
         EnvLoader::ensureLoaded();
@@ -33,9 +36,14 @@ public:
         return val ? std::string(val) : "HS256";
     }
 
-    // Maps the string from .env to cpp-jwt's algorithm enum. Only HS256 is
-    // actually exercised by this project, but this keeps JWT_ALGORITHM from
-    // being a config value nobody reads.
+    // Maps the string from .env to cpp-jwt's algorithm enum. Only covers
+    // the HS-family (HS256/384/512) - cpp-jwt also defines RS256/384/512
+    // and ES256/384/512, but those are asymmetric (need a public/private
+    // key pair, not the single shared secret() this project uses), so
+    // supporting them would need a completely different config shape, not
+    // just another enum branch here. HS256 is the only one actually
+    // exercised today; HS384/HS512 are included since they're a one-line
+    // addition on the same shared-secret model.
     static jwt::algorithm algorithmEnum()
     {
         std::string alg = JWT_ALGORITHM();

@@ -8,11 +8,13 @@ int main()
 {
     try
     {
-        // Fails fast, before the server starts listening, if JWT_SECRET is
-        // missing - see AuthConfig::JWT_SECRET(). Caught below instead of
-        // letting it reach std::terminate(), so the failure reason is a
-        // single clear line instead of a raw "terminate called..." dump.
+        // Fails fast, before the server starts listening, if JWT_SECRET or
+        // JWT_ALGORITHM is invalid - see AuthConfig::JWT_SECRET() and
+        // AuthConfig::algorithmEnum(). Caught below instead of letting it
+        // reach std::terminate(), so the failure reason is a single clear
+        // line instead of a raw "terminate called..." dump.
         AuthConfig::JWT_SECRET();
+        AuthConfig::algorithmEnum();
 
         // The DB client is built here in code - rather than in config.json -
         // so the DB password never sits in a plain-text file that gets
