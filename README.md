@@ -8,9 +8,9 @@ SQL injection, XSS, and rate-limit abuse before it's forwarded to the real backe
 
 | Name | ID | Email |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Benny Beer | 312556657 | bennybe@edu.jmc.ac.il |
+| Nadav Ben Melech | 211728316 | nadavbenm@edu.jmc.ac.il |
+| Orel Zabriko     | 211845458 | orelzab@edu.jmc.ac.il   |
 
 
 ## Services
