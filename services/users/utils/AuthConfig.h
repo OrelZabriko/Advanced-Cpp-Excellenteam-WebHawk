@@ -3,15 +3,17 @@
 #include "../../shared/EnvLoader.h"
 #include <cstdlib>
 #include <string>
+#include <jwt/jwt.hpp>
 
 // JWT signing/expiry settings, read from the repo-root .env.
 // Used only by the users service (registration, login, session validation).
 class AuthConfig 
 {
 public:
-    // Secret key used to sign and verify JWTs (HMAC). Falls back to a
-    // non-secret placeholder so the service still boots without a .env -
-    // do NOT rely on the default outside local development.
+    // No hardcoded default on purpose - same principle as DbConfig::PASSWORD().
+    // A missing JWT_SECRET means every token this service signs is forgeable
+    // by anyone who has read this public repo, so the service must refuse to
+    // start rather than silently sign with a known secret.
     static std::string JWT_SECRET() 
     {
         EnvLoader::ensureLoaded();
@@ -29,6 +31,18 @@ public:
         EnvLoader::ensureLoaded();
         const char* val = std::getenv("JWT_ALGORITHM");
         return val ? std::string(val) : "HS256";
+    }
+
+    // Maps the string from .env to cpp-jwt's algorithm enum. Only HS256 is
+    // actually exercised by this project, but this keeps JWT_ALGORITHM from
+    // being a config value nobody reads.
+    static jwt::algorithm algorithmEnum()
+    {
+        std::string alg = JWT_ALGORITHM();
+        if (alg == "HS256") return jwt::algorithm::HS256;
+        if (alg == "HS384") return jwt::algorithm::HS384;
+        if (alg == "HS512") return jwt::algorithm::HS512;
+        throw std::runtime_error("Unsupported JWT_ALGORITHM: " + alg);
     }
 
     // How long a token (and its matching user_sessions row) stays valid, in

@@ -30,14 +30,15 @@ void UserService::loginUser(
     UserRepository::findByEmail(
         email,
         [password, ip, onSuccess, onInvalidCredentials, onError](int userId, const std::string &storedHash) {
-            if (!HashUtils::verifyPassword(password, storedHash)) {
+            if (!HashUtils::verifyPassword(password, storedHash)) 
+            {
                 onInvalidCredentials();
                 return;
             }
 
             using namespace jwt::params;
             auto token = jwt::jwt_object{
-                algorithm(jwt::algorithm::HS256),
+                algorithm(AuthConfig::algorithmEnum()),
                 secret(AuthConfig::JWT_SECRET()),
                 payload({
                     {"user_id", std::to_string(userId)},
@@ -86,7 +87,7 @@ void UserService::validateToken(
         std::error_code ec;
         auto decoded = jwt::decode(
             token,
-            algorithms({"HS256"}),
+            algorithms({AuthConfig::JWT_ALGORITHM()}),
             ec,
             secret(AuthConfig::JWT_SECRET()),
             verify(true)
