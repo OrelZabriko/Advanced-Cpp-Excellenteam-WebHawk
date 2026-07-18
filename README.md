@@ -34,28 +34,30 @@ only from inside the Docker network, by service name (e.g.
 
 ## Security notes
 
-- **Passwords are hashed with bcrypt** (`services/users/utils/HashUtils.cc`),
-  per the project spec - not a plain fast hash like SHA-256, since bcrypt's
-  built-in salting and deliberately slow cost factor are what make password
-  hashes resistant to brute-force/rainbow-table attacks. There's no official
-  Ubuntu package for it, so it's built from source - already handled
-  automatically inside `Dockerfile-users`; only needed manually if running
-  the users service natively (see the bottom of this file).
-- **JWTs use `cpp-jwt`**, also built from source for the same reason (no
-  official Ubuntu package) - also handled automatically in `Dockerfile-users`.
-- Per Contract A in the API Contracts doc, `POST /analyze`'s response always
-  includes `attack_type` and `reason` - as explicit `null` on a clean/allowed
-  request, not omitted - so callers can rely on both fields always being present.
-- **`backend-registry`'s API keys are shown exactly once** - at creation time
-  (`POST /backends`). `GET /backends` (the listing endpoint) never returns
-  `api_key` for any registration, the same way a real secret/API key is
-  normally handled - otherwise anyone with list access could read out every
+- **Passwords are hashed with bcrypt** (`services/users/utils/HashUtils.cc`), per the project spec - not 
+  a plain fast hash like SHA-256, since bcrypt's built-in salting and deliberately slow cost factor are 
+  what make password hashes resistant to brute-force/rainbow-table attacks. There's no official Ubuntu 
+  package for it, so it's built from source - already handled automatically inside `Dockerfile-users`; only 
+  needed manually if running the users service natively (see the bottom of this file).
+- **JWTs use `cpp-jwt`**, also built from source for the same reason (no official Ubuntu package) - also 
+  handled automatically in `Dockerfile-users`.
+- Per Contract A in the API Contracts doc, `POST /analyze`'s response always includes `attack_type` and 
+  `reason` - as explicit `null` on a clean/allowed request, not omitted - so callers can rely on both 
+  fields always being present.
+- **`backend-registry`'s API keys are shown exactly once** - at creation time (`POST /backends`). 
+  `GET /backends` (the listing endpoint) never returns `api_key` for any registration, the same way a 
+  real secret/API key is normally handled - otherwise anyone with list access could read out every
   backend's live credential.
-- **The middleware identifies which registered backend to use via an
-  `X-API-Key` header** on every request it receives. This is a judgment
-  call, not a locked-in team decision - the API Contracts doc defines the
-  *lookup* (Contract B: given an api_key, find the target) but not how that
-  key travels on the request. 
+- **The middleware identifies which registered backend to use via an `X-API-Key` header** on 
+  every request it receives. This is a judgment call, not a locked-in team decision - the API 
+  Contracts doc defines the *lookup* (Contract B: given an api_key, find the target) but not 
+  how that key travels on the request. 
+- **Every internal HTTP call the middleware makes (lookup, /validate, /analyze, and the real
+  backend) has an explicit timeout** (5s by default - see `ProxyService.cc`). Without this, a 
+  single slow or hung internal service - or a slow real backend the client doesn't
+  control - would tie up the request indefinitely instead of failing fast with a 500. 
+  `HttpClient::sendRequest`'s third argument is the timeout in seconds; `0` (the default if 
+  omitted) means "no timeout", which is why this has to be set explicitly on every call.
 
 
 ## Prerequisites

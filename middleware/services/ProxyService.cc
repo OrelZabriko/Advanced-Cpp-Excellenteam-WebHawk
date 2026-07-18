@@ -9,6 +9,11 @@ using namespace drogon;
 
 namespace 
 {
+    // Every call this file makes to another internal service uses the same timeout, in seconds. Without it,
+    // HttpClient::sendRequest's timeout defaults to 0 ("wait forever") - a single hung service or slow real
+    // backend would then tie up the request indefinitely instead of failing fast with a 500.
+    constexpr double INTERNAL_CALL_TIMEOUT_SECS = 5.0;
+
     void sendJsonResponse(const std::function<void(const HttpResponsePtr &)> &callback, const Json::Value &body, HttpStatusCode status) 
     {
         auto resp = HttpResponse::newHttpJsonResponse(body);
@@ -95,53 +100,13 @@ namespace
             [callback](ReqResult result, const HttpResponsePtr &response) {
                 if (result != ReqResult::Ok || !response) 
                 {
-                    sendInternalError(callback, "real backend unreachable");
+                    sendInternalError(callback, "real backend unreachable or timed out");
                     return;
                 }
                 // Pass the real backend's response through exactly as-is.
                 callback(response);
-            }
-        );
-    }
-
-    // Step 3: ask security-engine whether this request is safe (Contract A).
-    void callAnalyze(
-        const HttpRequestPtr &req,
-        const std::string &targetUrl,
-        const std::function<void(const HttpResponsePtr &)> &callback
-    ) 
-    {
-        Json::Value payload = RequestPayloadBuilder::buildAnalyzePayload(req);
-        Json::StreamWriterBuilder writer;
-        std::string payloadStr = Json::writeString(writer, payload);
-
-        auto client = HttpClient::newHttpClient(ServiceEndpoints::SECURITY_ENGINE);
-        auto analyzeReq = HttpRequest::newHttpRequest();
-        analyzeReq->setMethod(Post);
-        analyzeReq->setPath("/analyze");
-        analyzeReq->addHeader("Content-Type", "application/json");
-        analyzeReq->setBody(payloadStr);
-
-        client->sendRequest(
-            analyzeReq,
-            [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                if (result != ReqResult::Ok || !response) {
-                    sendInternalError(callback, "security-engine unreachable");
-                    return;
-                }
-                auto json = response->getJsonObject();
-                if (!json) {
-                    sendInternalError(callback, "security-engine returned a non-JSON response");
-                    return;
-                }
-                bool allowed = (*json)["allowed"].asBool();
-                if (!allowed) {
-                    std::string attackType = (*json)["attack_type"].isNull() ? "" : (*json)["attack_type"].asString();
-                    sendBlockedResponse(callback, attackType);
-                    return;
-                }
-                forwardToRealBackend(req, targetUrl, callback);
-            }
+            },
+            INTERNAL_CALL_TIMEOUT_SECS
         );
     }
 
@@ -180,8 +145,14 @@ namespace
         client->sendRequest(
             validateReq,
             [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                if (result != ReqResult::Ok || !response) {
-                    sendInternalError(callback, "users service unreachable");
+                if (result != ReqResult::Ok || !response) 
+                {
+                    sendInternalError(callback, "users service unreachable or timed out");
+                    return;
+                }
+                if (response->statusCode() >= k500InternalServerError)
+                {
+                    sendInternalError(callback, "users service returned an internal error");
                     return;
                 }
                 auto json = response->getJsonObject();
@@ -192,8 +163,51 @@ namespace
                     sendJsonResponse(callback, body, k401Unauthorized);
                     return;
                 }
-                callAnalyze(req, targetUrl, callback);
-            }
+                forwardToRealBackend(req, targetUrl, callback);
+            },
+            INTERNAL_CALL_TIMEOUT_SECS
+        );
+    }
+
+    // Step 3: ask security-engine whether this request is safe (Contract A).
+    void callAnalyze(
+        const HttpRequestPtr &req,
+        const std::string &targetUrl,
+        const std::function<void(const HttpResponsePtr &)> &callback
+    ) 
+    {
+        Json::Value payload = RequestPayloadBuilder::buildAnalyzePayload(req);
+        Json::StreamWriterBuilder writer;
+        std::string payloadStr = Json::writeString(writer, payload);
+
+        auto client = HttpClient::newHttpClient(ServiceEndpoints::SECURITY_ENGINE);
+        auto analyzeReq = HttpRequest::newHttpRequest();
+        analyzeReq->setMethod(Post);
+        analyzeReq->setPath("/analyze");
+        analyzeReq->addHeader("Content-Type", "application/json");
+        analyzeReq->setBody(payloadStr);
+
+        client->sendRequest(
+            analyzeReq,
+            [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
+                if (result != ReqResult::Ok || !response) {
+                    sendInternalError(callback, "security-engine unreachable or timed out");
+                    return;
+                }
+                auto json = response->getJsonObject();
+                if (!json) {
+                    sendInternalError(callback, "security-engine returned a non-JSON response");
+                    return;
+                }
+                bool allowed = (*json)["allowed"].asBool();
+                if (!allowed) {
+                    std::string attackType = (*json)["attack_type"].isNull() ? "" : (*json)["attack_type"].asString();
+                    sendBlockedResponse(callback, attackType);
+                    return;
+                }
+                validateJwt(req, targetUrl, callback);
+            },
+            INTERNAL_CALL_TIMEOUT_SECS
         );
     }
 } // end of setting namespace
@@ -227,7 +241,7 @@ void ProxyService::handleRequest(
         [req, callback](ReqResult result, const HttpResponsePtr &response) {
             if (result != ReqResult::Ok || !response) 
             {
-                sendInternalError(callback, "backend-registry unreachable");
+                sendInternalError(callback, "backend-registry unreachable or timed out");
                 return;
             }
 
@@ -249,7 +263,8 @@ void ProxyService::handleRequest(
             }
 
             std::string targetUrl = (*json)["target_url"].asString();
-            validateJwt(req, targetUrl, callback);
-        }
+            callAnalyze(req, targetUrl, callback);
+        },
+        INTERNAL_CALL_TIMEOUT_SECS
     );
 }

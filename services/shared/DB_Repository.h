@@ -41,7 +41,8 @@ public:
         DbSelectCallback successCallback,
         DbErrorCallback errorCallback,
         Args&&... args
-    ) {
+    ) 
+    {
         dbClient->execSqlAsync(
             sqlQuery,
             [successCallback](const drogon::orm::Result& result) {
@@ -73,13 +74,4 @@ public:
             std::forward<Args>(args)...
         );
     }
-
-    // Auto-build SELECT query
-    void runSelectQuery(
-        const std::string& sourceTable,
-        DbSelectCallback&& successCallback,
-        DbErrorCallback&& errorCallback,
-        const std::string& selectFields = "*",
-        const std::string& condition = ""
-    );
 };

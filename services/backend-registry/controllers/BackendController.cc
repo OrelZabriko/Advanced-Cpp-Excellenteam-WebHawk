@@ -47,6 +47,16 @@ void BackendController::registerBackend(const HttpRequestPtr &req, std::function
         return;
     }
 
+    if (!targetUrl.starts_with("http://") && !targetUrl.starts_with("https://"))
+    {
+        Json::Value error;
+        error["error"] = "target_url must start with http:// or https://";
+        auto resp = HttpResponse::newHttpJsonResponse(error);
+        resp->setStatusCode(k400BadRequest);
+        callback(resp);
+        return;
+    }
+
     BackendService::registerBackend(
         serviceName, targetUrl,
         [callback, serviceName, targetUrl](int id, const std::string &apiKey, const std::string &createdAt) {
@@ -153,6 +163,16 @@ void BackendController::updateBackend(const HttpRequestPtr &req, std::function<v
     {
         Json::Value error;
         error["error"] = "service_name and target_url cannot be empty";
+        auto resp = HttpResponse::newHttpJsonResponse(error);
+        resp->setStatusCode(k400BadRequest);
+        callback(resp);
+        return;
+    }
+
+    if (!targetUrl.starts_with("http://") && !targetUrl.starts_with("https://"))
+    {
+        Json::Value error;
+        error["error"] = "target_url must start with http:// or https://";
         auto resp = HttpResponse::newHttpJsonResponse(error);
         resp->setStatusCode(k400BadRequest);
         callback(resp);
