@@ -47,7 +47,7 @@ void BackendController::registerBackend(const HttpRequestPtr &req, std::function
         return;
     }
 
-    if (targetUrl.rfind("http://", 0) != 0 && targetUrl.rfind("https://", 0) != 0)
+    if (!targetUrl.starts_with("http://") && !targetUrl.starts_with("https://"))
     {
         Json::Value error;
         error["error"] = "target_url must start with http:// or https://";
@@ -169,7 +169,7 @@ void BackendController::updateBackend(const HttpRequestPtr &req, std::function<v
         return;
     }
 
-    if (targetUrl.rfind("http://", 0) != 0 && targetUrl.rfind("https://", 0) != 0)
+    if (!targetUrl.starts_with("http://") && !targetUrl.starts_with("https://"))
     {
         Json::Value error;
         error["error"] = "target_url must start with http:// or https://";
