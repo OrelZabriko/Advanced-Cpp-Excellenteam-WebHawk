@@ -16,7 +16,11 @@ public:
     {
         EnvLoader::ensureLoaded();
         const char* val = std::getenv("JWT_SECRET");
-        return val ? std::string(val) : "default_secret";
+        if (!val || std::string(val).empty())
+        {
+            throw std::runtime_error("JWT_SECRET is not set - refusing to start with a guessable default");
+        }
+        return std::string(val);
     }
 
     // JWT signing algorithm name, as passed to the jwt-cpp library.

@@ -58,6 +58,15 @@ only from inside the Docker network, by service name (e.g.
   control - would tie up the request indefinitely instead of failing fast with a 500. 
   `HttpClient::sendRequest`'s third argument is the timeout in seconds; `0` (the default if 
   omitted) means "no timeout", which is why this has to be set explicitly on every call.
+- **The users service refuses to start if `JWT_SECRET` is missing from `.env`** (see `AuthConfig::JWT_SECRET()` 
+  and `main.cc`) - it does not fall back to a guessable default. Every token this service signs is only as safe 
+  as this secret. If you see `[users] fatal startup error: JWT_SECRET is not set` in `docker compose logs users`, copy
+  `.env.example` to `.env` and set a real secret using one of:
+  - **Generate it (recommended)** - on Linux/WSL/macOS:
+    `openssl rand -base64 32`. This gives 32 bytes of real randomness, the minimum recommended key size for HS256.
+  - **Type it yourself** - only if `openssl` isn't available. Bang out at least 40-50 random characters (mix of 
+    upper/lower case, digits, symbols) - not a word, phrase, or anything you'd reuse elsewhere. A human-typed string 
+    is *never* as strong as a generated one (people are bad at being random), so treat this as a fallback, not a preference.
 
 
 ## Prerequisites
