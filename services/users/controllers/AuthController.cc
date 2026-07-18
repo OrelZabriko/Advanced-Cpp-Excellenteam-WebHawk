@@ -120,7 +120,8 @@ void AuthController::logout(const HttpRequestPtr &req, std::function<void(const 
 {
     // Extract token from Authorization header
     std::string authHeader = req->getHeader("Authorization");
-    if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ") {
+    if (authHeader.empty() || !authHeader.starts_with("Bearer ")) 
+    {
         Json::Value response;
         response["error"] = "Missing or invalid Authorization header";
         auto resp = HttpResponse::newHttpJsonResponse(response);
