@@ -239,7 +239,8 @@ void ProxyService::handleRequest(
     // Built manually (rather than a setParameter-style helper) since apiKey
     // is always plain hex here (see ApiKeyGenerator) - nothing that needs
     // URL-encoding.
-    lookupReq->setPath("/backends/lookup?api_key=" + apiKey);
+    lookupReq->setPath("/backends/lookup");
+    lookupReq->setParameter("api_key", apiKey);
 
     client->sendRequest(
         lookupReq,
