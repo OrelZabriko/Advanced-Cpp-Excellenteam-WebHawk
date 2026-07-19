@@ -111,6 +111,51 @@ namespace
         );
     }
 
+    // Step 3: ask security-engine whether this request is safe (Contract A).
+    void callAnalyze(
+        const HttpRequestPtr &req,
+        const std::string &targetUrl,
+        const std::function<void(const HttpResponsePtr &)> &callback
+    ) 
+    {
+        Json::Value payload = RequestPayloadBuilder::buildAnalyzePayload(req);
+        Json::StreamWriterBuilder writer;
+        std::string payloadStr = Json::writeString(writer, payload);
+
+        auto client = HttpClient::newHttpClient(ServiceEndpoints::SECURITY_ENGINE);
+        auto analyzeReq = HttpRequest::newHttpRequest();
+        analyzeReq->setMethod(Post);
+        analyzeReq->setPath("/analyze");
+        analyzeReq->addHeader("Content-Type", "application/json");
+        analyzeReq->setBody(payloadStr);
+
+        client->sendRequest(
+            analyzeReq,
+            [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
+                if (result != ReqResult::Ok || !response) 
+                {
+                    sendInternalError(callback, "security-engine unreachable or timed out");
+                    return;
+                }
+                auto json = response->getJsonObject();
+                if (!json) 
+                {
+                    sendInternalError(callback, "security-engine returned a non-JSON response");
+                    return;
+                }
+                bool allowed = (*json)["allowed"].asBool();
+                if (!allowed) 
+                {
+                    std::string attackType = (*json)["attack_type"].isNull() ? "" : (*json)["attack_type"].asString();
+                    sendBlockedResponse(callback, attackType);
+                    return;
+                }
+                forwardToRealBackend(req, targetUrl, callback);
+            },
+            INTERNAL_CALL_TIMEOUT_SECS
+        );
+    }
+
     // Step 2: validate the caller's JWT by calling the users service's own
     // /validate endpoint, rather than decoding it here - so the JWT secret only
     // ever needs to live in one service (users), not two.
@@ -166,48 +211,6 @@ namespace
                     return;
                 }
                 callAnalyze(req, targetUrl, callback);
-            },
-            INTERNAL_CALL_TIMEOUT_SECS
-        );
-    }
-
-    // Step 3: ask security-engine whether this request is safe (Contract A).
-    void callAnalyze(
-        const HttpRequestPtr &req,
-        const std::string &targetUrl,
-        const std::function<void(const HttpResponsePtr &)> &callback
-    ) 
-    {
-        Json::Value payload = RequestPayloadBuilder::buildAnalyzePayload(req);
-        Json::StreamWriterBuilder writer;
-        std::string payloadStr = Json::writeString(writer, payload);
-
-        auto client = HttpClient::newHttpClient(ServiceEndpoints::SECURITY_ENGINE);
-        auto analyzeReq = HttpRequest::newHttpRequest();
-        analyzeReq->setMethod(Post);
-        analyzeReq->setPath("/analyze");
-        analyzeReq->addHeader("Content-Type", "application/json");
-        analyzeReq->setBody(payloadStr);
-
-        client->sendRequest(
-            analyzeReq,
-            [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                if (result != ReqResult::Ok || !response) {
-                    sendInternalError(callback, "security-engine unreachable or timed out");
-                    return;
-                }
-                auto json = response->getJsonObject();
-                if (!json) {
-                    sendInternalError(callback, "security-engine returned a non-JSON response");
-                    return;
-                }
-                bool allowed = (*json)["allowed"].asBool();
-                if (!allowed) {
-                    std::string attackType = (*json)["attack_type"].isNull() ? "" : (*json)["attack_type"].asString();
-                    sendBlockedResponse(callback, attackType);
-                    return;
-                }
-                forwardToRealBackend(req, targetUrl, callback);
             },
             INTERNAL_CALL_TIMEOUT_SECS
         );
