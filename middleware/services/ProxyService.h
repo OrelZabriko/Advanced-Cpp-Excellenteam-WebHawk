@@ -20,9 +20,9 @@
 //      pass the real backend's response back to the client as-is.
 class ProxyService 
 {
-public:
-    static void handleRequest(
-        const drogon::HttpRequestPtr &req,
-        std::function<void(const drogon::HttpResponsePtr &)> &&callback
-    );
+    public:
+        static void handleRequest(
+            const drogon::HttpRequestPtr &req,
+            std::function<void(const drogon::HttpResponsePtr &)> &&callback
+        );
 };
