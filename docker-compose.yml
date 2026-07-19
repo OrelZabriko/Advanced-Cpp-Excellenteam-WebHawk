@@ -36,7 +36,13 @@ services:
       context: .
       dockerfile: Dockerfile-users
     container_name: webhawk_users
-    # No external "ports:" - same reasoning as security_engine above.
+    # TEMP for local Postman testing only - exposes /register, /login,
+    # /validate directly so a test client can obtain a JWT without going
+    # through the middleware (which doesn't route to users itself). Remove
+    # this before any real deployment - the final design has no external
+    # entry point except middleware (see README).
+    ports:
+      - "8081:8080"
     depends_on:
       - postgres
     env_file:
@@ -49,7 +55,11 @@ services:
       context: .
       dockerfile: Dockerfile-backend-registry
     container_name: webhawk_backend_registry
-    # No external "ports:" - same reasoning as security_engine/users above.
+    # TEMP for local Postman testing only - exposes /backends so a test
+    # client can register a target and obtain an api_key. Remove before any
+    # real deployment, same reasoning as the users port above.
+    ports:
+      - "8082:8080"
     depends_on:
       - postgres
     env_file:
