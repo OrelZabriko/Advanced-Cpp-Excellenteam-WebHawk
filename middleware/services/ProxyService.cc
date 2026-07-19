@@ -236,10 +236,11 @@ void ProxyService::handleRequest(
     auto client = HttpClient::newHttpClient(ServiceEndpoints::BACKEND_REGISTRY);
     auto lookupReq = HttpRequest::newHttpRequest();
     lookupReq->setMethod(Get);
-    // Built manually (rather than a setParameter-style helper) since apiKey
-    // is always plain hex here (see ApiKeyGenerator) - nothing that needs
-    // URL-encoding.
-    lookupReq->setPath("/backends/lookup?api_key=" + apiKey);
+    // setParameter rather than embedding the query in setPath: Drogon
+    // URL-encodes the path before sending, which would turn '?' and '='
+    // into %3F/%3D and break the lookup.
+    lookupReq->setPath("/backends/lookup");
+    lookupReq->setParameter("api_key", apiKey);
 
     client->sendRequest(
         lookupReq,

@@ -14,13 +14,14 @@ SQL injection, XSS, and rate-limit abuse before it's forwarded to the real backe
 
 
 ## Services
-
-| Service | Internal port | Reachable from outside Docker? |
-|---|---|---|
-| `middleware` | 8080 | **Yes - the only one.** This is the project's single entry point. |
-| `services/users` | 8080 | No - internal only |
-| `services/security-engine` | 8080 | No - internal only |
-| `services/backend-registry` | 8080 | No - internal only |
+ 
+| Compose service | Source folder | Host port | Role |
+|---|---|---|---|
+| `middleware` | `middleware/` | **8080** | The public entry point. All protected traffic. |
+| `security_engine` | `services/security-engine/` | 8081 | SQLi / XSS / rate-limit detection. |
+| `users` | `services/users/` | 8082 | Registration, login, JWT issue and revoke. |
+| `backend_registry` | `services/backend_registry/` | 8083 | Backend registration and API key issuance. |
+| `postgres` | - | 5432 | Shared database. |
 
 Each service is an independent Drogon executable with its own `main.cc`,
 `CMakeLists.txt`, and Dockerfile (`Dockerfile-security` for security-engine,

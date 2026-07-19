@@ -19,9 +19,8 @@ services:
       context: .
       dockerfile: Dockerfile-security
     container_name: webhawk_security
-    # No external "ports:" - reachable only from inside the Docker network
-    # (i.e. only by the middleware, once it exists), matching the final
-    # architecture: the middleware is the project's single public entry point.
+    ports:
+      - "8081:8080"
     depends_on:
       - postgres
     env_file:
@@ -36,13 +35,8 @@ services:
       context: .
       dockerfile: Dockerfile-users
     container_name: webhawk_users
-    # TEMP for local Postman testing only - exposes /register, /login,
-    # /validate directly so a test client can obtain a JWT without going
-    # through the middleware (which doesn't route to users itself). Remove
-    # this before any real deployment - the final design has no external
-    # entry point except middleware (see README).
     ports:
-      - "8081:8080"
+      - "8082:8080"
     depends_on:
       - postgres
     env_file:
@@ -50,16 +44,13 @@ services:
     environment:
       - DB_HOST=postgres
 
-  backend-registry:
+  backend_registry:
     build:
       context: .
       dockerfile: Dockerfile-backend-registry
     container_name: webhawk_backend_registry
-    # TEMP for local Postman testing only - exposes /backends so a test
-    # client can register a target and obtain an api_key. Remove before any
-    # real deployment, same reasoning as the users port above.
     ports:
-      - "8082:8080"
+      - "8083:8080"
     depends_on:
       - postgres
     env_file:
@@ -80,6 +71,6 @@ services:
       - postgres
       - security_engine
       - users
-      - backend-registry
+      - backend_registry
     env_file:
       - .env
