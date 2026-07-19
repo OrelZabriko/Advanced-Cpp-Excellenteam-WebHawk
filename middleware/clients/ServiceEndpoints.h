@@ -15,6 +15,6 @@
 namespace ServiceEndpoints 
 {
     inline const std::string USERS = "http://users:8080";
-    inline const std::string SECURITY_ENGINE = "http://security_engine:8081";
-    inline const std::string BACKEND_REGISTRY = "http://backend_registry:8082";
+    inline const std::string SECURITY_ENGINE = "http://security_engine:8080";
+    inline const std::string BACKEND_REGISTRY = "http://backend_registry:8080";
 }
