@@ -25,11 +25,12 @@ namespace
     // per the API Contracts doc's own note: "Keep the blocked response generic
     // enough that it doesn't leak exactly which detection rule fired."
     void sendBlockedResponse(const std::function<void(const HttpResponsePtr &)> &callback, const std::string &attackType)
-     {
+    {
         Json::Value body;
         body["error"] = "Request blocked";
         body["attack_type"] = attackType;
-        sendJsonResponse(callback, body, k403Forbidden);
+        HttpStatusCode status = (attackType == "rate_limit") ? k429TooManyRequests : k403Forbidden;
+        sendJsonResponse(callback, body, status);
     }
 
     // Shared "something went wrong talking to another service" handler - called
@@ -157,13 +158,14 @@ namespace
                 }
                 auto json = response->getJsonObject();
                 bool valid = json && (*json)["valid"].asBool();
-                if (!valid) {
+                if (!valid) 
+                {
                     Json::Value body;
                     body["error"] = "Invalid or expired token";
                     sendJsonResponse(callback, body, k401Unauthorized);
                     return;
                 }
-                forwardToRealBackend(req, targetUrl, callback);
+                callAnalyze(req, targetUrl, callback);
             },
             INTERNAL_CALL_TIMEOUT_SECS
         );
@@ -205,7 +207,7 @@ namespace
                     sendBlockedResponse(callback, attackType);
                     return;
                 }
-                validateJwt(req, targetUrl, callback);
+                forwardToRealBackend(req, targetUrl, callback);
             },
             INTERNAL_CALL_TIMEOUT_SECS
         );
@@ -263,7 +265,7 @@ void ProxyService::handleRequest(
             }
 
             std::string targetUrl = (*json)["target_url"].asString();
-            callAnalyze(req, targetUrl, callback);
+            validateJwt(req, targetUrl, callback);
         },
         INTERNAL_CALL_TIMEOUT_SECS
     );

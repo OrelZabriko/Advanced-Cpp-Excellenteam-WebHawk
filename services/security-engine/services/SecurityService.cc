@@ -22,7 +22,7 @@ bool SecurityService::detectSQLi(const std::string& input)
         std::regex("(drop\\s+table)"),                      // DROP TABLE
         std::regex("(;\\s*(delete|drop|insert|update)\\s)"),// ; DELETE FROM / ; DROP ...
         std::regex("('\\s*;\\s*--)"),                       // '; --
-        std::regex("(\\b(select|insert|update|delete)\\b.*\\b(from|into|set)\\b)", std::regex::icase), // SELECT ... FROM
+        std::regex("(\\b(select|insert|update|delete)\\b.*[';]|--).*\\b(from|into|set)\\b", std::regex::icase),
         std::regex("(1\\s*=\\s*1)"),                        // 1=1
         std::regex("('\\s*or\\s+'.*'\\s*=\\s*')"),          // ' or 'a'='a'
     };
@@ -108,6 +108,7 @@ void SecurityService::analyzeRequest(
     collectAllStrings(requestPayload.get("query_params", Json::nullValue), allTexts);
     collectAllStrings(requestPayload.get("path_params", Json::nullValue), allTexts);
     collectAllStrings(requestPayload.get("body", Json::nullValue), allTexts);
+    collectAllStrings(requestPayload.get("headers", Json::nullValue), allTexts);
 
     // --- Check 1: SQL Injection ---
     for (const auto& text : allTexts) 

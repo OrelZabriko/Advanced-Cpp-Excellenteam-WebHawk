@@ -19,22 +19,28 @@ public:
 private:
     static bool load() 
     {
-        // The binary runs with its working directory set to services/<name>/,
-        // but there's a single .env at the repo root, two levels up.
         std::ifstream file(".env");
         if (!file.is_open()) file.open("../../.env");
         if (!file.is_open()) file.open("../.env");
         if (!file.is_open()) return false;
 
+        auto trim = [](std::string s) {
+            size_t start = s.find_first_not_of(" \t");
+            if (start == std::string::npos) return std::string();
+            size_t end = s.find_last_not_of(" \t");
+            return s.substr(start, end - start + 1);
+        };
+
         std::string line;
         while (std::getline(file, line)) 
         {
             if (!line.empty() && line.back() == '\r') line.pop_back();
+            line = trim(line);
             if (line.empty() || line[0] == '#') continue;
             auto pos = line.find('=');
             if (pos == std::string::npos) continue;
-            std::string key = line.substr(0, pos);
-            std::string value = line.substr(pos + 1);
+            std::string key = trim(line.substr(0, pos));
+            std::string value = trim(line.substr(pos + 1));
             setenv(key.c_str(), value.c_str(), 1);
         }
         return true;

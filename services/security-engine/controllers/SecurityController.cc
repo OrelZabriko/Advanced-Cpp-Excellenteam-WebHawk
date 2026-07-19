@@ -36,7 +36,12 @@ void SecurityController::analyze(const HttpRequestPtr &req, std::function<void(c
             response["attack_type"] = allowed ? Json::Value::null : Json::Value(attackType);
             response["reason"] = allowed ? Json::Value::null : Json::Value(reason);
             auto resp = HttpResponse::newHttpJsonResponse(response);
-            resp->setStatusCode(allowed ? k200OK : k403Forbidden);
+            HttpStatusCode status = k200OK;
+            if (!allowed)
+            {
+                status = (attackType == "rate_limit") ? k429TooManyRequests : k403Forbidden;
+            }
+            resp->setStatusCode(status);
             callback(resp);
         },
         [callback](const std::string &error) {
