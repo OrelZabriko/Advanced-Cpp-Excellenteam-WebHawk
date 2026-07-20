@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y libpq-dev
 WORKDIR /app
 COPY . /app
 
-WORKDIR /app/services/backend-registry/build
+WORKDIR /app/services/backend_registry/build
 RUN cmake .. && make
 
-WORKDIR /app/services/backend-registry
+WORKDIR /app/services/backend_registry
 CMD ["./build/backend_registry"]
