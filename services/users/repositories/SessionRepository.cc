@@ -15,14 +15,14 @@ void SessionRepository::insert(
     // make_interval(secs => $4) converts the integer parameter to a Postgres interval.
     DB_Repository::getInstance().run_update_query_params(
         "INSERT INTO user_sessions (user_id, token_id, ip, expires_at) "
-        "VALUES ($1, $2, $3, NOW() + make_interval(secs => $4))",
+        "VALUES ($1::integer, $2, $3, NOW() + make_interval(secs => $4::integer))",
         [onSuccess](size_t rowsAffected) {
             onSuccess();
         },
         [onError](const std::string &error) {
             onError(error);
         },
-        userId, tokenId, ip, AuthConfig::JWT_EXPIRY_SECS()
+        std::to_string(userId), tokenId, ip, std::to_string(AuthConfig::JWT_EXPIRY_SECS())
     );
 }
 
