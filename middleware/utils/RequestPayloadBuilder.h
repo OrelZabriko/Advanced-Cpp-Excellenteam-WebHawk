@@ -13,20 +13,34 @@ class RequestPayloadBuilder
         {
             Json::Value payload;
             payload["endpoint"] = req->path();
-            payload["method"] = req->methodString();
-            payload["ip"] = req->getPeerAddr().toIp();
+            payload["method"]   = req->methodString();
+            payload["ip"]       = req->getPeerAddr().toIp();
         
             Json::Value headers(Json::objectValue);
-            for (const auto &header : req->getHeaders()) 
-            {
-                headers[header.first] = header.second;
+            try {
+                for (const auto &header : req->getHeaders()) 
+                {
+                    // Skip headers whose name or value are not plain strings
+                    // (e.g. contain embedded nulls). Passing them to JsonCpp
+                    // as a map key can throw Json::LogicError and crash the process.
+                    if (!header.first.empty())
+                        headers[header.first] = header.second;
+                }
+            } catch (...) {
+                // If anything goes wrong building headers, just leave them empty.
+                headers = Json::Value(Json::objectValue);
             }
             payload["headers"] = headers;
         
             Json::Value queryParams(Json::objectValue);
-            for (const auto &param : req->getParameters()) 
-            {
-                queryParams[param.first] = param.second;
+            try {
+                for (const auto &param : req->getParameters()) 
+                {
+                    if (!param.first.empty())
+                        queryParams[param.first] = param.second;
+                }
+            } catch (...) {
+                queryParams = Json::Value(Json::objectValue);
             }
             payload["query_params"] = queryParams;
         

@@ -4,6 +4,7 @@
 #include <drogon/HttpClient.h>
 #include <drogon/drogon.h>
 #include <json/json.h>
+#include <algorithm>
 
 using namespace drogon;
 
@@ -99,13 +100,28 @@ namespace
         client->sendRequest(
             outboundReq,
             [callback](ReqResult result, const HttpResponsePtr &response) {
-                if (result != ReqResult::Ok || !response) 
-                {
-                    sendInternalError(callback, "real backend unreachable or timed out");
-                    return;
+                try {
+                    if (result != ReqResult::Ok || !response) 
+                    {
+                        sendInternalError(callback, "real backend unreachable or timed out");
+                        return;
+                    }
+                    auto newResp = HttpResponse::newHttpResponse();
+                    newResp->setStatusCode(response->statusCode());
+                    newResp->setBody(std::string(response->body()));
+                    for (auto const& [key, value] : response->headers()) {
+                        std::string lowerKey = key;
+                        std::transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), ::tolower);
+                        if (lowerKey != "content-length" && lowerKey != "transfer-encoding" && lowerKey != "connection") {
+                            newResp->addHeader(key, value);
+                        }
+                    }
+                    callback(newResp);
+                } catch (const std::exception &e) {
+                    sendInternalError(callback, std::string("exception in forwardToRealBackend callback: ") + e.what());
+                } catch (...) {
+                    sendInternalError(callback, "unknown exception in forwardToRealBackend callback");
                 }
-                // Pass the real backend's response through exactly as-is.
-                callback(response);
             },
             INTERNAL_CALL_TIMEOUT_SECS
         );
@@ -118,49 +134,69 @@ namespace
         const std::function<void(const HttpResponsePtr &)> &callback
     ) 
     {
-        Json::Value payload = RequestPayloadBuilder::buildAnalyzePayload(req);
+        Json::Value payload;
+        try {
+            payload = RequestPayloadBuilder::buildAnalyzePayload(req);
+        } catch (const std::exception &e) {
+            sendInternalError(callback, std::string("failed to build analyze payload: ") + e.what());
+            return;
+        } catch (...) {
+            sendInternalError(callback, "unknown exception building analyze payload");
+            return;
+        }
+
         Json::StreamWriterBuilder writer;
         std::string payloadStr = Json::writeString(writer, payload);
 
         auto client = HttpClient::newHttpClient(ServiceEndpoints::SECURITY_ENGINE);
-        auto analyzeReq = HttpRequest::newHttpRequest();
+        auto analyzeReq = HttpRequest::newHttpJsonRequest(payload);
         analyzeReq->setMethod(Post);
         analyzeReq->setPath("/analyze");
-        analyzeReq->addHeader("Content-Type", "application/json");
-        analyzeReq->setBody(payloadStr);
 
         client->sendRequest(
             analyzeReq,
             [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                if (result != ReqResult::Ok || !response) 
-                {
-                    sendInternalError(callback, "security-engine unreachable or timed out");
-                    return;
+                try {
+                    if (result != ReqResult::Ok || !response) 
+                    {
+                        sendInternalError(callback, "security-engine unreachable or timed out");
+                        return;
+                    }
+                     // Without this check a 5xx from security-engine falls through to the
+                    // "allowed" lookup below, where a missing key makes asBool() return
+                    // false - so an internal failure would reach the client as a 403
+                    // "Request blocked" with an empty attack_type. validateJwt already
+                    // guards this way; callAnalyze needs the same.
+                    if (response->statusCode() >= k500InternalServerError)
+                    {
+                        sendInternalError(callback, "security-engine returned an internal error");
+                        return;
+                    }
+                    auto json = response->getJsonObject();
+                    if (!json || !json->isObject()) 
+                    {
+                        sendInternalError(callback, "security-engine returned a non-JSON or non-object response");
+                        return;
+                    }
+                    if (!json->isMember("allowed"))
+                    {
+                        LOG_ERROR << "security-engine response missing 'allowed'. Raw body: " << response->getBody();
+                        sendInternalError(callback, "security-engine returned invalid format");
+                        return;
+                    }
+                    bool allowed = (*json)["allowed"].asBool();
+                    if (!allowed) 
+                    {
+                        std::string attackType = (*json)["attack_type"].isNull() ? "" : (*json)["attack_type"].asString();
+                        sendBlockedResponse(callback, attackType);
+                        return;
+                    }
+                    forwardToRealBackend(req, targetUrl, callback);
+                } catch (const std::exception &e) {
+                    sendInternalError(callback, std::string("exception in callAnalyze callback: ") + e.what());
+                } catch (...) {
+                    sendInternalError(callback, "unknown exception in callAnalyze callback");
                 }
-                 // Without this check a 5xx from security-engine falls through to the
-                // "allowed" lookup below, where a missing key makes asBool() return
-                // false - so an internal failure would reach the client as a 403
-                // "Request blocked" with an empty attack_type. validateJwt already
-                // guards this way; callAnalyze needs the same.
-                if (response->statusCode() >= k500InternalServerError)
-                {
-                    sendInternalError(callback, "security-engine returned an internal error");
-                    return;
-                }
-                auto json = response->getJsonObject();
-                if (!json) 
-                {
-                    sendInternalError(callback, "security-engine returned a non-JSON response");
-                    return;
-                }
-                bool allowed = (*json)["allowed"].asBool();
-                if (!allowed) 
-                {
-                    std::string attackType = (*json)["attack_type"].isNull() ? "" : (*json)["attack_type"].asString();
-                    sendBlockedResponse(callback, attackType);
-                    return;
-                }
-                forwardToRealBackend(req, targetUrl, callback);
             },
             INTERNAL_CALL_TIMEOUT_SECS
         );
@@ -201,26 +237,32 @@ namespace
         client->sendRequest(
             validateReq,
             [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                if (result != ReqResult::Ok || !response) 
-                {
-                    sendInternalError(callback, "users service unreachable or timed out");
-                    return;
+                try {
+                    if (result != ReqResult::Ok || !response) 
+                    {
+                        sendInternalError(callback, "users service unreachable or timed out");
+                        return;
+                    }
+                    if (response->statusCode() >= k500InternalServerError)
+                    {
+                        sendInternalError(callback, "users service returned an internal error");
+                        return;
+                    }
+                    auto json = response->getJsonObject();
+                    bool valid = json && json->isObject() && (*json)["valid"].asBool();
+                    if (!valid) 
+                    {
+                        Json::Value body;
+                        body["error"] = "Invalid or expired token";
+                        sendJsonResponse(callback, body, k401Unauthorized);
+                        return;
+                    }
+                    callAnalyze(req, targetUrl, callback);
+                } catch (const std::exception &e) {
+                    sendInternalError(callback, std::string("exception in validateJwt callback: ") + e.what());
+                } catch (...) {
+                    sendInternalError(callback, "unknown exception in validateJwt callback");
                 }
-                if (response->statusCode() >= k500InternalServerError)
-                {
-                    sendInternalError(callback, "users service returned an internal error");
-                    return;
-                }
-                auto json = response->getJsonObject();
-                bool valid = json && (*json)["valid"].asBool();
-                if (!valid) 
-                {
-                    Json::Value body;
-                    body["error"] = "Invalid or expired token";
-                    sendJsonResponse(callback, body, k401Unauthorized);
-                    return;
-                }
-                callAnalyze(req, targetUrl, callback);
             },
             INTERNAL_CALL_TIMEOUT_SECS
         );
@@ -255,31 +297,37 @@ void ProxyService::handleRequest(
     client->sendRequest(
         lookupReq,
         [req, callback](ReqResult result, const HttpResponsePtr &response) {
-            if (result != ReqResult::Ok || !response) 
-            {
-                sendInternalError(callback, "backend-registry unreachable or timed out");
-                return;
-            }
+            try {
+                if (result != ReqResult::Ok || !response) 
+                {
+                    sendInternalError(callback, "backend-registry unreachable or timed out");
+                    return;
+                }
 
-            auto json = response->getJsonObject();
-            if (!json || !(*json)["found"].asBool()) 
-            {
-                Json::Value body;
-                body["error"] = "Unknown API key";
-                sendJsonResponse(callback, body, k404NotFound);
-                return;
-            }
+                auto json = response->getJsonObject();
+                if (!json || !json->isObject() || !(*json)["found"].asBool()) 
+                {
+                    Json::Value body;
+                    body["error"] = "Unknown API key";
+                    sendJsonResponse(callback, body, k404NotFound);
+                    return;
+                }
 
-            if (!(*json)["active"].asBool()) 
-            {
-                Json::Value body;
-                body["error"] = "This backend's protection is currently paused";
-                sendJsonResponse(callback, body, k403Forbidden);
-                return;
-            }
+                if (!(*json)["active"].asBool()) 
+                {
+                    Json::Value body;
+                    body["error"] = "This backend's protection is currently paused";
+                    sendJsonResponse(callback, body, k403Forbidden);
+                    return;
+                }
 
-            std::string targetUrl = (*json)["target_url"].asString();
-            validateJwt(req, targetUrl, callback);
+                std::string targetUrl = (*json)["target_url"].asString();
+                validateJwt(req, targetUrl, callback);
+            } catch (const std::exception &e) {
+                sendInternalError(callback, std::string("exception in lookup callback: ") + e.what());
+            } catch (...) {
+                sendInternalError(callback, "unknown exception in lookup callback");
+            }
         },
         INTERNAL_CALL_TIMEOUT_SECS
     );
