@@ -1,5 +1,6 @@
 #include <drogon/drogon.h>
 #include "../shared/DbConfig.h"
+#include "../shared/ErrorHandlers.h"
 
 int main() 
 {
@@ -14,7 +15,7 @@ int main()
         DbConfig::NAME(),
         DbConfig::USER(),
         DbConfig::PASSWORD(),
-        1,          // connection pool size (number of connections to keep open)
+        4,          // connection pool size - 1 would serialize every async query in this service behind a single connection
         "",         // filename - unused for postgresql, only relevant for sqlite3
         "default",  // client name - must match what DB_Repository looks up via getDbClient("default")
         false       // isFast - Drogon's "fast" mode requires special handling; not used here
@@ -22,5 +23,12 @@ int main()
 
     // Only port/listener settings remain in config.json - no credentials.
     drogon::app().loadConfigFile("config.json");
+
+    // Guarantees every response from this service carries a JSON body -
+    // including the 404/405 Drogon raises before routing, and any exception a
+    // controller did not anticipate. Per-controller validation still handles
+    // known bad input; this is the net underneath it.
+    ErrorHandlers::installAll();
+
     drogon::app().run();
 }
