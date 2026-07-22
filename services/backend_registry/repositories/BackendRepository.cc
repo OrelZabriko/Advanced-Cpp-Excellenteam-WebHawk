@@ -69,7 +69,7 @@ void BackendRepository::updateActiveStatus(
 ) 
 {
     DB_Repository::getInstance().run_update_query_params(
-        "UPDATE backend_registration SET active = $1 WHERE id = $2",
+        "UPDATE backend_registration SET active = $1::boolean WHERE id = $2::integer",
         [onSuccess, onNotFound](size_t rowsAffected) {
             if (rowsAffected == 0) onNotFound();
             else onSuccess();
@@ -77,7 +77,7 @@ void BackendRepository::updateActiveStatus(
         [onError](const std::string& error) {
             onError(error);
         },
-        active, id
+        std::string(active ? "true" : "false"), std::to_string(id)
     );
 }
 
@@ -124,7 +124,7 @@ void BackendRepository::update(
 ) 
 {
     DB_Repository::getInstance().run_update_query_params(
-        "UPDATE backend_registration SET service_name = $1, target_url = $2 WHERE id = $3",
+        "UPDATE backend_registration SET service_name = $1, target_url = $2 WHERE id = $3::integer",
         [onSuccess, onNotFound](size_t rowsAffected) {
             if (rowsAffected == 0) onNotFound();
             else onSuccess();
@@ -132,6 +132,6 @@ void BackendRepository::update(
         [onError](const std::string& error) {
             onError(error);
         },
-        serviceName, targetUrl, id
+        serviceName, targetUrl, std::to_string(id)
     );
 }
