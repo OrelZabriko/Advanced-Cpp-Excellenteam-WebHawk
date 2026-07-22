@@ -1,0 +1,5 @@
+# Normalize all text files to LF in the repo, regardless of which OS/editor
+# a teammate commits from (this repo previously had a CRLF/LF mix between
+# services/users and services/security-engine, which was also the root
+# cause of the EnvLoader.h "\r in DB_HOST" bug).
+* text=auto eol=lf

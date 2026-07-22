@@ -6,9 +6,9 @@ RUN apt-get update && apt-get install -y libpq-dev
 WORKDIR /app
 COPY . /app
 
-WORKDIR /app/services/security-engine/build
+WORKDIR /app/services/security_engine/build
 RUN cmake .. && make
 
-WORKDIR /app/services/security-engine
+WORKDIR /app/services/security_engine
 # Run the compiled server
 CMD ["./build/security_engine"]

@@ -1,0 +1,32 @@
+FROM drogonframework/drogon:latest
+
+# Install dependencies:
+# - libpq-dev: Postgres client library required by Drogon for DB access
+# - libbcrypt-dev: password hashing (see services/users/utils/HashUtils.cc)
+RUN apt-get update && apt-get install -y libpq-dev libssl-dev nlohmann-json3-dev libgtest-dev git cmake
+
+RUN git clone https://github.com/trusch/libbcrypt /tmp/libbcrypt \
+    && cd /tmp/libbcrypt \
+    && mkdir build && cd build \
+    && cmake .. \
+    && make \
+    && make install \
+    && ldconfig \
+    && rm -rf /tmp/libbcrypt
+
+RUN git clone https://github.com/arun11299/cpp-jwt /tmp/cpp-jwt \
+    && cd /tmp/cpp-jwt \
+    && mkdir build && cd build \
+    && cmake .. \
+    && make install \
+    && rm -rf /tmp/cpp-jwt
+
+WORKDIR /app
+COPY . /app
+
+WORKDIR /app/services/users/build
+RUN cmake .. && make
+
+WORKDIR /app/services/users
+# Run the compiled server
+CMD ["./build/users_service"]

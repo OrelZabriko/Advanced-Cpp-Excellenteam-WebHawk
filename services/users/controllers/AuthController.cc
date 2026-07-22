@@ -1,16 +1,19 @@
 #include "AuthController.h"
 #include "../services/UserService.h"
 
-void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) 
+{
     auto json = req->getJsonObject();
-    if (!json) {
+    if (!json) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Invalid JSON body"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
         return;
     }
 
-    if (!json->isMember("email") || !json->isMember("password")) {
+    if (!json->isMember("email") || !json->isMember("password")) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Email and password are required"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
@@ -20,7 +23,8 @@ void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(
     std::string email = (*json)["email"].asString();
     std::string password = (*json)["password"].asString();
 
-    if (email.empty() || password.empty()) {
+    if (email.empty() || password.empty()) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Email and password cannot be empty"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
@@ -53,16 +57,19 @@ void AuthController::registerUser(const HttpRequestPtr &req, std::function<void(
     );
 }
 
-void AuthController::login(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+void AuthController::login(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) 
+{
     auto json = req->getJsonObject();
-    if (!json) {
+    if (!json) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Invalid JSON body"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
         return;
     }
 
-    if (!json->isMember("email") || !json->isMember("password")) {
+    if (!json->isMember("email") || !json->isMember("password")) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Email and password are required"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
@@ -72,7 +79,8 @@ void AuthController::login(const HttpRequestPtr &req, std::function<void(const H
     std::string email = (*json)["email"].asString();
     std::string password = (*json)["password"].asString();
 
-    if (email.empty() || password.empty()) {
+    if (email.empty() || password.empty()) 
+    {
         auto resp = HttpResponse::newHttpJsonResponse(Json::Value("Email and password cannot be empty"));
         resp->setStatusCode(k400BadRequest);
         callback(resp);
@@ -108,10 +116,12 @@ void AuthController::login(const HttpRequestPtr &req, std::function<void(const H
     );
 }
 
-void AuthController::logout(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+void AuthController::logout(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) 
+{
     // Extract token from Authorization header
     std::string authHeader = req->getHeader("Authorization");
-    if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ") {
+    if (authHeader.empty() || !authHeader.starts_with("Bearer ")) 
+    {
         Json::Value response;
         response["error"] = "Missing or invalid Authorization header";
         auto resp = HttpResponse::newHttpJsonResponse(response);
@@ -148,10 +158,12 @@ void AuthController::logout(const HttpRequestPtr &req, std::function<void(const 
     );
 }
 
-void AuthController::validate(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+void AuthController::validate(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) 
+{
     // 1. Extract token from Authorization header
     std::string authHeader = req->getHeader("Authorization");
-    if (authHeader.empty() || authHeader.substr(0, 7) != "Bearer ") {
+    if (authHeader.empty() || !authHeader.starts_with("Bearer ")) 
+    {
         Json::Value response;
         response["valid"] = false;
         response["reason"] = "Missing or invalid Authorization header";

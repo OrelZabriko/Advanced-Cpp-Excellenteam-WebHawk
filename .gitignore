@@ -1,5 +1,7 @@
-.vscode/
+.vscode/* 
+!.vscode/c_cpp_properties.json
 uploads/
-services/users/build/
+*Zone.Identifier*
+.env
+**/build/
 services/users/.env
-services/users/config.json
