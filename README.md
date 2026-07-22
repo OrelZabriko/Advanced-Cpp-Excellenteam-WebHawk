@@ -32,7 +32,7 @@ forwarded to the real backend.
     │ 1. GET /backends/lookup?api_key=...      ──►  backend_registry
     │    Which backend does this key belong to,
     │    and is it currently active?
-    │    ✗ unknown key → 404   ✗ paused → 403
+    │    ✗ unknown key → 403   ✗ paused → 403
     │
     │ 2. GET /validate                         ──►  users
     │    Is this JWT signed correctly, unexpired,
@@ -60,7 +60,7 @@ reaches it goes through the pipeline above - it is a proxy, not an API.
 | Compose service | Source folder | Host port | Role |
 |---|---|---|---|
 | `middleware` | `middleware/` | **8080** | The public entry point. All protected traffic. |
-| `security_engine` | `services/security-engine/` | 8081 | SQLi / XSS / rate-limit detection. |
+| `security_engine` | `services/security_engine/` | 8081 | SQLi / XSS / rate-limit detection. |
 | `users` | `services/users/` | 8082 | Registration, login, JWT issue and revoke. |
 | `backend_registry` | `services/backend_registry/` | 8083 | Backend registration and API key issuance. |
 | `postgres` | - | 5432 | Shared database. |
@@ -83,11 +83,9 @@ exist so each service can be tested in isolation during development, which
 matters because a request that fails end-to-end otherwise has three possible
 culprits and no way to tell them apart. Remove them for a real deployment.
  
-**Service names use underscores in Compose, hyphens in folder paths.** Docker's
-internal DNS resolves the **Compose service name**, so the middleware calls
-`http://security_engine:8080` even though the source lives in
-`services/security-engine/`. This is worth knowing before editing
-`ServiceEndpoints.h` - a hyphen there will not resolve.
+**Compose service names match the folder names under `services/`.** Docker's internal DNS resolves 
+the **Compose service name**, so the middleware calls `http://security_engine:8080` - the same 
+underscore form. Worth knowing before editing `ServiceEndpoints.h`: a hyphen there will not resolve.
  
 ---
 
@@ -158,8 +156,7 @@ Accepts any path and any method. Two headers are required on every request.
 |---|---|
 | `200` (or whatever the backend returns) | Allowed and forwarded. |
 | `401` | Missing `X-API-Key`, missing `Authorization`, or invalid/revoked token. |
-| `404` | The API key is not registered. |
-| `403` | Blocked as `sqli`/`xss`, or the backend's protection is paused. |
+| `403` | The API key is not registered, blocked as `sqli`/`xss`, or the backend's protection is paused. |
 | `429` | Blocked as `rate_limit`. |
 | `500` | An internal service was unreachable or failed. |
  
@@ -324,7 +321,7 @@ Config is split by ownership, on one shared loader:
 | `services/shared/EnvLoader.h` | reads `.env` once per process | all three below |
 | `services/shared/DbConfig.h` | `DB_*` | every service that talks to Postgres |
 | `services/users/utils/AuthConfig.h` | `JWT_*` | users only |
-| `services/security-engine/utils/SecurityConfig.h` | `RATE_LIMIT_*` | security-engine only |
+| `services/security_engine/utils/SecurityConfig.h` | `RATE_LIMIT_*` | security-engine only |
  
 Each service's `main.cc` builds its DB connection from `DbConfig::HOST()` and
 friends in code, so the password never sits in a committed file. `config.json`
@@ -953,6 +950,12 @@ Worked examples of every request and its expected response are in the [Postman E
     }
   ```
 
+> Run this **8 times in a row** (Postman Collection Runner → 8 iterations, this
+> request only), with `RATE_LIMIT_MAX_REQUESTS=5` in `.env`. A single run always
+> returns 200 - the point of this test is the transition to 429.
+>
+> Expected: runs 1-5 → `200 OK`. Runs 6-8 → `429 Too Many Requests` with
+> `{"allowed": false, "attack_type": "rate_limit", "reason": "Rate limit exceeded for this IP"}`.
 ##### Response
 - status: ``` 200 OK ```
 - 
@@ -1089,6 +1092,14 @@ Worked examples of every request and its expected response are in the [Postman E
       "error": "Internal server error"
   }
   ```
+> **This 500 is expected in the current setup, not a failure.** The registration
+> in Test 1.1 points `target_url` at `http://demo-backend:8080`, and no such
+> service exists in `docker-compose.yml` - so stage 4 has nothing to forward to.
+> Stages 1-3 (api_key lookup, JWT validation, security analysis) all passed;
+> only the final hop failed.
+>
+> To see this return `200`, register a backend whose `target_url` points at any
+> HTTP service running on the Docker network, then re-run with that `api_key`.
 
 
 #### Test 4.6
