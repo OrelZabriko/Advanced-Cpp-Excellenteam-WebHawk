@@ -1,10 +1,12 @@
 #include "UserService.h"
-#include "../utils/Config.h"
+#include "../utils/AuthConfig.h"
 #include "../repositories/UserRepository.h"
 #include "../repositories/SessionRepository.h"
 #include "../utils/HashUtils.h"
 #include <jwt/jwt.hpp>
 #include <ctime>
+#include <random>
+#include <sstream>
 
 void UserService::registerUser(
     const std::string &email,
@@ -12,7 +14,8 @@ void UserService::registerUser(
     std::function<void()> onSuccess,
     std::function<void()> onDuplicate,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     std::string passwordHash = HashUtils::hashPassword(password);
     UserRepository::insert(email, passwordHash, onSuccess, onDuplicate, onError);
 }
@@ -24,24 +27,52 @@ void UserService::loginUser(
     std::function<void(const std::string &token)> onSuccess,
     std::function<void()> onInvalidCredentials,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     UserRepository::findByEmail(
         email,
         [password, ip, onSuccess, onInvalidCredentials, onError](int userId, const std::string &storedHash) {
-            if (!HashUtils::verifyPassword(password, storedHash)) {
+            if (!HashUtils::verifyPassword(password, storedHash)) 
+            {
                 onInvalidCredentials();
                 return;
             }
 
             using namespace jwt::params;
             auto token = jwt::jwt_object{
-                algorithm(jwt::algorithm::HS256),
-                secret(Config::JWT_SECRET()),
+                algorithm(AuthConfig::algorithmEnum()),
+                secret(AuthConfig::JWT_SECRET()),
                 payload({
                     {"user_id", std::to_string(userId)},
                 })
             };
-            token.add_claim("exp", std::time(nullptr) + Config::JWT_EXPIRY_SECS());
+            token.add_claim("exp", std::time(nullptr) + AuthConfig::JWT_EXPIRY_SECS());
+
+            // Without a random component the payload is only user_id + exp, and
+            // std::time has one-second granularity - so two logins by the same
+            // user within the same second produce a byte-identical token. That
+            // collides with the UNIQUE constraint on user_sessions.token_id and
+            // turns a valid login into a 500. jti ("JWT ID", RFC 7519 4.1.7)
+            // exists for exactly this: it makes every issued token distinct
+            // regardless of timing.
+            //
+            // static so the generator is seeded once rather than per login -
+            // re-seeding on every call would reintroduce the same collision, as
+            // two calls in the same instant could draw the same system seed.
+            // thread_local because Drogon serves requests on multiple threads
+            // and mt19937_64 is not thread-safe.
+            static thread_local std::mt19937_64 rng = [] {
+                std::random_device rd;
+                // A single rd() call yields 32 bits on most implementations,
+                // which would leave most of mt19937_64's state unseeded. Four
+                // draws through seed_seq use the full entropy available.
+                std::seed_seq seed{rd(), rd(), rd(), rd()};
+                return std::mt19937_64(seed);
+            }();
+
+            std::ostringstream jti;
+            jti << std::hex << rng();
+            token.add_claim("jti", jti.str());
 
             std::string tokenStr = token.signature();
 
@@ -65,7 +96,8 @@ void UserService::logoutUser(
     std::function<void()> onSuccess,
     std::function<void()> onNotFound,
     std::function<void(const std::string &error)> onError
-) {
+) 
+{
     SessionRepository::revoke(tokenId, onSuccess, onNotFound, onError);
 }
 
@@ -74,20 +106,23 @@ void UserService::validateToken(
     std::function<void(int userId)> onValid,
     std::function<void(const std::string &reason)> onInvalid,
     std::function<void(const std::string &error)> onError
-) {
-    try {
+) 
+{
+    try 
+    {
         using namespace jwt::params;
         
         std::error_code ec;
         auto decoded = jwt::decode(
             token,
-            algorithms({"HS256"}),
+            algorithms({AuthConfig::JWT_ALGORITHM()}),
             ec,
-            secret(Config::JWT_SECRET()),
+            secret(AuthConfig::JWT_SECRET()),
             verify(true)
         );
 
-        if (ec) {
+        if (ec) 
+        {
             onInvalid("Invalid token: " + ec.message());
             return;
         }
@@ -106,7 +141,9 @@ void UserService::validateToken(
             }
         );
 
-    } catch (const std::exception &e) {
+    } 
+    catch (const std::exception &e) 
+    {
         onInvalid(std::string("Invalid token: ") + e.what());
     }
 }

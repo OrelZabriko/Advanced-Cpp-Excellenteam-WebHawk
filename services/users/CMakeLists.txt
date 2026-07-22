@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(users_service)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Drogon REQUIRED)
 find_package(cpp-jwt REQUIRED)
@@ -17,4 +18,4 @@ add_executable(${PROJECT_NAME}
     ../../shared/DB_Repository.cc
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon cryptopp cpp-jwt::cpp-jwt)
+target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon bcrypt cpp-jwt::cpp-jwt)
