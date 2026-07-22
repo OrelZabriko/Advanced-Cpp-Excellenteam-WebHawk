@@ -486,10 +486,17 @@ A second collection covering the full end-to-end flow through the middleware
 - Save the api_key you will get in the result!
 
 ##### Response
-- status: ``` ```
+- status: ``` 201 Created ```
 - 
-  ```
-
+  ```json
+  {
+      "active": true,
+      "api_key": "whk_live_38cff3a620f6eb47bc7ee2b0d57f35fc",
+      "created_at": "2026-07-22 11:56:43.114419+00",
+      "id": 1,
+      "service_name": "google-api",
+      "target_url": "http://demo-backend:8080"
+  }
   ```
 
 
@@ -499,10 +506,15 @@ A second collection covering the full end-to-end flow through the middleware
 - URL: ``` http://localhost:8083/backends/lookup?api_key={{api_key}} ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "active": true,
+      "found": true,
+      "service_name": "google-api",
+      "target_url": "http://demo-backend:8080"
+  }
   ```
 
 
@@ -512,23 +524,42 @@ A second collection covering the full end-to-end flow through the middleware
 - URL: ``` http://localhost:8083/backends/lookup?api_key=whk_live_doesnotexist ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "found": false
+  }
   ```
 
 
 #### Test 1.4
 ##### Request
 - Method: GET
-- URL: ``` ```
+- URL: ``` http://localhost:8083/backends ```
 
 ##### Response
-- status: ``` http://localhost:8083/backends ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "backends": [
+          {
+              "active": true,
+              "created_at": "2026-07-22 11:56:43.114419+00",
+              "id": 1,
+              "service_name": "google-api",
+              "target_url": "http://demo-backend:8080"
+          },
+          {
+              "active": true,
+              "created_at": "2026-07-22 12:11:36.029519+00",
+              "id": 2,
+              "service_name": "google-api",
+              "target_url": "http://demo-backend:8080"
+          }
+      ]
+  }
   ```
 
 
@@ -548,10 +579,15 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "id": 1,
+      "message": "Backend updated successfully",
+      "service_name": "google-api-v2",
+      "target_url": "http://demo-backend:8080"
+  }
   ```
 
 
@@ -570,10 +606,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 400 Bad Request ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Missing required field(s): target_url"
+  }
   ```
 
 
@@ -593,10 +631,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 400 Bad Request ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "target_url must start with http:// or https://"
+  }
   ```
 
 
@@ -616,10 +656,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 404 Not Found ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Backend registration not found"
+  }
   ```
 
 
@@ -640,10 +682,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 201 Created ```
 - 
-  ```
-
+  ```json
+  {
+      "message": "User registered successfully"
+  }
   ```
 
 #### Test 2.2
@@ -662,10 +706,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 409 Conflict ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Email already exists"
+  }
   ```
 
 
@@ -686,10 +732,13 @@ A second collection covering the full end-to-end flow through the middleware
 - Save the token you will get in the result!
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "message": "Login successful",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODQ4MTIzNTAsImp0aSI6IjNhNzBkNDcxMGFkYTExYTkiLCJ1c2VyX2lkIjoiMSJ9.stee71tumpCmaBuB_PSGx6cyH-GS4EdtzKpYUp3bh-Y"
+  }
   ```
 
 
@@ -709,10 +758,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 401 Unauthorized ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Invalid email or password"
+  }
   ```
 
 
@@ -725,10 +776,13 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE: ``` Bearer {{token}} ``` 
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "user_id": 1,
+      "valid": true
+  }
   ```
 
 
@@ -738,10 +792,13 @@ A second collection covering the full end-to-end flow through the middleware
 - URL: ``` http://localhost:8082/validate ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 401 Unauthorized ```
 - 
-  ```
-
+  ```json
+  {
+      "reason": "Missing or invalid Authorization header",
+      "valid": false
+  }
   ```
 
 
@@ -754,10 +811,12 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE: ``` Bearer {{token}} ``` 
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "message": "Logged out successfully"
+  }
   ```
 
 
@@ -770,10 +829,13 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE: ``` Bearer {{token}} ``` 
 
 ##### Response
-- status: ``` ```
+- status: ``` 401 Unauthorized ```
 - 
-  ```
-
+  ```json
+  {
+      "reason": "Token revoked or expired",
+      "valid": false
+  }
   ```
 
 
@@ -799,12 +861,15 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
+  ```json
+  {
+      "allowed": true,
+      "attack_type": null,
+      "reason": null
+  }
   ```
-
-  ```
-
 
 #### Test 3.2
 ##### Request
@@ -827,10 +892,14 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 403 Forbidden ```
 - 
-  ```
-
+  ```json
+  {
+      "allowed": false,
+      "attack_type": "sqli",
+      "reason": "SQL injection pattern detected"
+  }
   ```
 
 
@@ -855,10 +924,14 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 403 Forbidden ```
 - 
-  ```
-
+  ```json
+  {
+      "allowed": false,
+      "attack_type": "xss",
+      "reason": "XSS pattern detected"
+  }
   ```
 
 
@@ -883,10 +956,14 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "allowed": true,
+      "attack_type": null,
+      "reason": null
+  }
   ```
 
 
@@ -905,10 +982,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 400 Bad Request ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Missing required fields: endpoint, method, ip"
+  }
   ```
 
 
@@ -920,10 +999,12 @@ A second collection covering the full end-to-end flow through the middleware
 - URL: ``` http://localhost:8080/api/anything ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 401 Unauthorized ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Missing X-API-Key header"
+  }
   ```
 
 
@@ -936,10 +1017,12 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE: ``` whk_live_fake123 ```  
 
 ##### Response
-- status: ``` ```
+- status: ``` 403 Forbidden ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Unknown API key"
+  }
   ```
 
 
@@ -952,10 +1035,12 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE: ``` {{api_key}} ``` 
 
 ##### Response
-- status: ``` ```
+- status: ``` 401 Unauthorized ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Authorization header required"
+  }
   ```
 
 
@@ -970,10 +1055,12 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE-2: ``` Bearer garbage.token.here ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 401 Unauthorized ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Invalid or expired token"
+  }
   ```
 
 
@@ -997,10 +1084,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 500 Internal Server Error ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "Internal server error"
+  }
   ```
 
 
@@ -1023,10 +1112,13 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 403 Forbidden ```
 - 
-  ```
-
+  ```json
+  {
+      "attack_type": "sqli",
+      "error": "Request blocked"
+  }
   ```
 
 
@@ -1041,10 +1133,13 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE-2: ``` Bearer {{token}} ``` 
 
 ##### Response
-- status: ``` ```
+- status: ``` 403 Forbidden ```
 - 
-  ```
-
+  ```json
+  {
+      "attack_type": "xss",
+      "error": "Request blocked"
+  }
   ```
 
 
@@ -1059,10 +1154,13 @@ A second collection covering the full end-to-end flow through the middleware
     VALUE-2: ``` Bearer {{token}} ``` 
 
 ##### Response
-- status: ``` ```
+- status: ``` 429 Too Many Requests ```
 - 
-  ```
-
+  ```json
+  {
+      "attack_type": "rate_limit",
+      "error": "Request blocked"
+  }
   ```
 
 
@@ -1081,10 +1179,14 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "active": false,
+      "id": 1,
+      "message": "Status updated successfully"
+  }
   ```
 
 
@@ -1103,10 +1205,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 403 Forbidden ```
 - 
-  ```
-
+  ```json
+  {
+      "error": "This backend's protection is currently paused"
+  }
   ```
 
 
@@ -1125,8 +1229,12 @@ A second collection covering the full end-to-end flow through the middleware
   ```
 
 ##### Response
-- status: ``` ```
+- status: ``` 200 OK ```
 - 
-  ```
-
+  ```json
+  {
+      "active": true,
+      "id": 1,
+      "message": "Status updated successfully"
+  }
   ```
