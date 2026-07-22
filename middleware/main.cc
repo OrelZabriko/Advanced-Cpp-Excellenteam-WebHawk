@@ -1,5 +1,6 @@
 #include <drogon/drogon.h>
 #include "services/ProxyService.h"
+#include "../services/shared/ErrorHandlers.h"
 
 int main() 
 {
@@ -19,5 +20,12 @@ int main()
     // other three services over HTTP), so unlike main.cc in the other
     // services, there's no createDbClient() call here.
     drogon::app().loadConfigFile("config.json");
+
+    // Guarantees every response from this service carries a JSON body -
+    // including the 404/405 Drogon raises before routing, and any exception a
+    // controller did not anticipate. Per-controller validation still handles
+    // known bad input; this is the net underneath it.
+    ErrorHandlers::installAll();
+
     drogon::app().run();
 }

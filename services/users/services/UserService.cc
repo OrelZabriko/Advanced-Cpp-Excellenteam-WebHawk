@@ -5,6 +5,8 @@
 #include "../utils/HashUtils.h"
 #include <jwt/jwt.hpp>
 #include <ctime>
+#include <random>
+#include <sstream>
 
 void UserService::registerUser(
     const std::string &email,
@@ -45,6 +47,32 @@ void UserService::loginUser(
                 })
             };
             token.add_claim("exp", std::time(nullptr) + AuthConfig::JWT_EXPIRY_SECS());
+
+            // Without a random component the payload is only user_id + exp, and
+            // std::time has one-second granularity - so two logins by the same
+            // user within the same second produce a byte-identical token. That
+            // collides with the UNIQUE constraint on user_sessions.token_id and
+            // turns a valid login into a 500. jti ("JWT ID", RFC 7519 4.1.7)
+            // exists for exactly this: it makes every issued token distinct
+            // regardless of timing.
+            //
+            // static so the generator is seeded once rather than per login -
+            // re-seeding on every call would reintroduce the same collision, as
+            // two calls in the same instant could draw the same system seed.
+            // thread_local because Drogon serves requests on multiple threads
+            // and mt19937_64 is not thread-safe.
+            static thread_local std::mt19937_64 rng = [] {
+                std::random_device rd;
+                // A single rd() call yields 32 bits on most implementations,
+                // which would leave most of mt19937_64's state unseeded. Four
+                // draws through seed_seq use the full entropy available.
+                std::seed_seq seed{rd(), rd(), rd(), rd()};
+                return std::mt19937_64(seed);
+            }();
+
+            std::ostringstream jti;
+            jti << std::hex << rng();
+            token.add_claim("jti", jti.str());
 
             std::string tokenStr = token.signature();
 

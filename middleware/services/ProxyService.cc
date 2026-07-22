@@ -137,6 +137,16 @@ namespace
                     sendInternalError(callback, "security-engine unreachable or timed out");
                     return;
                 }
+                 // Without this check a 5xx from security-engine falls through to the
+                // "allowed" lookup below, where a missing key makes asBool() return
+                // false - so an internal failure would reach the client as a 403
+                // "Request blocked" with an empty attack_type. validateJwt already
+                // guards this way; callAnalyze needs the same.
+                if (response->statusCode() >= k500InternalServerError)
+                {
+                    sendInternalError(callback, "security-engine returned an internal error");
+                    return;
+                }
                 auto json = response->getJsonObject();
                 if (!json) 
                 {
