@@ -100,7 +100,8 @@ namespace
         client->sendRequest(
             outboundReq,
             [callback](ReqResult result, const HttpResponsePtr &response) {
-                try {
+                try 
+                {
                     if (result != ReqResult::Ok || !response) 
                     {
                         sendInternalError(callback, "real backend unreachable or timed out");
@@ -109,7 +110,8 @@ namespace
                     auto newResp = HttpResponse::newHttpResponse();
                     newResp->setStatusCode(response->statusCode());
                     newResp->setBody(std::string(response->body()));
-                    for (auto const& [key, value] : response->headers()) {
+                    for (auto const& [key, value] : response->headers()) 
+                    {
                         std::string lowerKey = key;
                         std::transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), ::tolower);
                         if (lowerKey != "content-length" && lowerKey != "transfer-encoding" && lowerKey != "connection") {
@@ -117,9 +119,13 @@ namespace
                         }
                     }
                     callback(newResp);
-                } catch (const std::exception &e) {
+                } 
+                catch (const std::exception &e) 
+                {
                     sendInternalError(callback, std::string("exception in forwardToRealBackend callback: ") + e.what());
-                } catch (...) {
+                } 
+                catch (...) 
+                {
                     sendInternalError(callback, "unknown exception in forwardToRealBackend callback");
                 }
             },
@@ -135,12 +141,17 @@ namespace
     ) 
     {
         Json::Value payload;
-        try {
+        try 
+        {
             payload = RequestPayloadBuilder::buildAnalyzePayload(req);
-        } catch (const std::exception &e) {
+        } 
+        catch (const std::exception &e) 
+        {
             sendInternalError(callback, std::string("failed to build analyze payload: ") + e.what());
             return;
-        } catch (...) {
+        } 
+        catch (...) 
+        {
             sendInternalError(callback, "unknown exception building analyze payload");
             return;
         }
@@ -156,7 +167,8 @@ namespace
         client->sendRequest(
             analyzeReq,
             [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                try {
+                try 
+                {
                     if (result != ReqResult::Ok || !response) 
                     {
                         sendInternalError(callback, "security-engine unreachable or timed out");
@@ -192,9 +204,13 @@ namespace
                         return;
                     }
                     forwardToRealBackend(req, targetUrl, callback);
-                } catch (const std::exception &e) {
+                } 
+                catch (const std::exception &e) 
+                {
                     sendInternalError(callback, std::string("exception in callAnalyze callback: ") + e.what());
-                } catch (...) {
+                } 
+                catch (...) 
+                {
                     sendInternalError(callback, "unknown exception in callAnalyze callback");
                 }
             },
@@ -237,7 +253,8 @@ namespace
         client->sendRequest(
             validateReq,
             [req, targetUrl, callback](ReqResult result, const HttpResponsePtr &response) {
-                try {
+                try 
+                {
                     if (result != ReqResult::Ok || !response) 
                     {
                         sendInternalError(callback, "users service unreachable or timed out");
@@ -258,9 +275,13 @@ namespace
                         return;
                     }
                     callAnalyze(req, targetUrl, callback);
-                } catch (const std::exception &e) {
+                } 
+                catch (const std::exception &e) 
+                {
                     sendInternalError(callback, std::string("exception in validateJwt callback: ") + e.what());
-                } catch (...) {
+                } 
+                catch (...) 
+                {
                     sendInternalError(callback, "unknown exception in validateJwt callback");
                 }
             },
@@ -323,9 +344,13 @@ void ProxyService::handleRequest(
 
                 std::string targetUrl = (*json)["target_url"].asString();
                 validateJwt(req, targetUrl, callback);
-            } catch (const std::exception &e) {
+            } 
+            catch (const std::exception &e) 
+            {
                 sendInternalError(callback, std::string("exception in lookup callback: ") + e.what());
-            } catch (...) {
+            } 
+            catch (...) 
+            {
                 sendInternalError(callback, "unknown exception in lookup callback");
             }
         },

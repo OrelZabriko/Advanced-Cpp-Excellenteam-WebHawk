@@ -446,24 +446,22 @@ cd ..
 ./build/<executable-name>
 ```
  
-Run it from the **service's own folder**, not from `build/`, so `config.json` and
-the relative path to the root `.env` resolve correctly. Only run **one** service
-this way at a time - they all listen on 8080 and will conflict.
+Run it from the **service's own folder**, not from `build/`, so `config.json` and the relative path to 
+the root `.env` resolve correctly. Only run **one** service this way at a time - they all listen on 
+8080 and will conflict.
  
-This same `cmake ..` generates the `compile_commands.json` that
-`.vscode/c_cpp_properties.json` points at, so it's worth doing once per service
-even if you never run them natively, just to fix editor include errors.
+This same `cmake ..` generates the `compile_commands.json` that `.vscode/c_cpp_properties.json` points at, so 
+it's worth doing once per service even if you never run them natively, just to fix editor include errors.
 
 ---
 
 ## Postman
 
-Collections live in `postman/`.
- 
-`webhawk_security_engine.postman_collection.json` tests `security_engine`'s `/analyze` in isolation on `localhost:8081` - clean requests, SQLi payloads, XSS payloads, and rate-limit behaviour. It's the fastest way to confirm the detection logic works before involving the rest of the pipeline.
- 
-A second collection covering the full end-to-end flow through the middleware
-(`localhost:8080`) is in progress.
+`postman/WebHawk_Full_Collection.json` covers the whole project - all four services, in run order: `backend_registry` (registration and lookup), `users` (registration, login, JWT validation and revocation), `security_engine` (`/analyze` in isolation), and finally the `middleware` pipeline end to end.
+
+Import it into Postman and run the folders in order. Two things depend on that order: the `api_key` from the first `backend_registry` request and the `token` from the `users` login are reused by every later request, and the `users` folder logs out at the end - so log in again before running the `middleware` folder.
+
+Worked examples of every request and its expected response are in the [Postman Examples](#postman-examples) section below.
 
 
 ## Postman Examples
