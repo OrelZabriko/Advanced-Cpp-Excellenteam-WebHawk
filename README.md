@@ -4,6 +4,7 @@ WebHawk is a security middleware platform: every incoming request is checked for
 SQL injection, XSS, and rate-limit abuse before it's forwarded to the real backend it's protecting.
 
 ---
+
 ## Team
 
 | Name | ID | Email |
